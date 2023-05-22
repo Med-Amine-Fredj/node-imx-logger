@@ -1,0 +1,26 @@
+{
+  "name": "node-imx-logger",
+  "version": "1.0.5",
+  "description": "Imaxeam logger for node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Fredj Mohamed Amine",
+    "email": "medamin.fredj@gmail.com"
+  },
+  "keywords": [
+    "mqtt",
+    "node",
+    "logger"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.10.3"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.1",
+    "@types/node": "^20.2.3"
+  }
+}
