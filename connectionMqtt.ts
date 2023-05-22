@@ -27,7 +27,7 @@ const LOGGER = (function () {
         mqttConnection = {
           ...conn,
           [logsChannelName]: logsChannel,
-          error: (payload) =>
+          error: (payload: messagePayloadToMqTTFromUsers) =>
             logsChannel.sendToQueue(
               "logs",
               Buffer.from(
@@ -36,7 +36,7 @@ const LOGGER = (function () {
                 })
               )
             ),
-          debug: (payload) =>
+          debug: (payload: messagePayloadToMqTTFromUsers) =>
             logsChannel.sendToQueue(
               "logs",
               Buffer.from(
