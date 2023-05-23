@@ -41,7 +41,7 @@ async function connectMqtt() {
   await connectMqtt();
 ```
 
- Now you can use or import the imxNodeLogger everywhere in the app with default existing methods by @AMQLIB [here]((https://www.npmjs.com/package/amqplib)) .
+ Now you can use or import the imxNodeLogger everywhere in the app with default existing methods by @AMQLIB [here](https://www.npmjs.com/package/amqplib) .
 
 ##### To send debug logs use :
 
