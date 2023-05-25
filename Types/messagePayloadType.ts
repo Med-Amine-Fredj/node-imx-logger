@@ -3,4 +3,5 @@ export type messagePayloadToMqTTFromUsers = {
   context: string;
   appName: string;
   user?: string;
+  extra?: any;
 };
