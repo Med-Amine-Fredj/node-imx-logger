@@ -49,67 +49,111 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var amqp = require("amqplib");
 var LOGGER = (function () {
-    var mqttConnection = null;
+    var rabbitMqConnection = null;
+    var isEnabled = true;
+    var logsChannelName = "";
     return {
-        createMqttConnection: function (option) {
+        createConnectionToRabbitMQ: function (option, queueName, enable) {
             return __awaiter(this, void 0, void 0, function () {
-                var conn, logsChannelName, logsChannel_1, error_1;
-                var _a;
-                return __generator(this, function (_b) {
-                    switch (_b.label) {
+                var conn, logsChannel_1, error_1;
+                var _this = this;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
                         case 0:
-                            _b.trys.push([0, 4, , 5]);
+                            _a.trys.push([0, 4, , 5]);
+                            isEnabled = enable !== null && enable !== void 0 ? enable : true;
                             return [4 /*yield*/, amqp.connect(option)];
                         case 1:
-                            conn = _b.sent();
-                            logsChannelName = "logs";
+                            conn = _a.sent();
+                            conn.on("error", function (error) {
+                                console.error("Erreur in createConnectionToRabbitMQ : ", error === null || error === void 0 ? void 0 : error.messgae);
+                                console.log("=============== Retrying to reconnect to imxLogger in 30 sec ...... ===============");
+                                setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0:
+                                                console.log("=============== Trying to reconnect to imxLogger.... ===============");
+                                                return [4 /*yield*/, LOGGER.createConnectionToRabbitMQ(option, queueName, enable)];
+                                            case 1:
+                                                _a.sent();
+                                                return [2 /*return*/];
+                                        }
+                                    });
+                                }); }, 30000);
+                            });
+                            conn.on("disconnected", function () {
+                                console.log("=============== imxNodeLogger disconnected =============== ");
+                            });
+                            conn.on("connected", function () {
+                                console.log("=============== imxNodeLogger connected ===============");
+                            });
+                            logsChannelName = queueName || "logs";
                             return [4 /*yield*/, conn.createChannel()];
                         case 2:
-                            logsChannel_1 = _b.sent();
-                            return [4 /*yield*/, logsChannel_1.assertQueue(logsChannelName, { durable: true })];
+                            logsChannel_1 = _a.sent();
+                            return [4 /*yield*/, logsChannel_1.checkQueue(logsChannelName)];
                         case 3:
-                            _b.sent();
-                            mqttConnection = __assign(__assign({}, conn), (_a = {}, _a[logsChannelName] = logsChannel_1, _a.error = function (payload) {
-                                return logsChannel_1.sendToQueue("logs", Buffer.from(JSON.stringify({
-                                    payload: __assign(__assign({}, payload), { level: "errors", date: new Date() }),
-                                })));
-                            }, _a.debug = function (payload) {
-                                return logsChannel_1.sendToQueue("logs", Buffer.from(JSON.stringify({
-                                    payload: __assign(__assign({}, payload), { level: "debug", date: new Date() }),
-                                })));
-                            }, _a));
-                            return [2 /*return*/, mqttConnection];
+                            _a.sent();
+                            console.log("=============== Connected to imx Logger successfully  ===============");
+                            rabbitMqConnection = {
+                                amqpConnection: conn,
+                                channelConnection: logsChannel_1,
+                                isEnabled: isEnabled,
+                                enableLogging: function () {
+                                    isEnabled = true;
+                                },
+                                disableLogging: function () {
+                                    isEnabled = false;
+                                },
+                                checkIsEnaled: function () {
+                                    return isEnabled;
+                                },
+                                error: function (payload) {
+                                    if (!isEnabled)
+                                        return;
+                                    logsChannel_1.sendToQueue(logsChannelName, Buffer.from(JSON.stringify({
+                                        payload: __assign(__assign({}, payload), { level: "errors", date: new Date() }),
+                                    })));
+                                },
+                                debug: function (payload) {
+                                    if (!isEnabled)
+                                        return;
+                                    logsChannel_1.sendToQueue(logsChannelName, Buffer.from(JSON.stringify({
+                                        payload: __assign(__assign({}, payload), { level: "debug", date: new Date() }),
+                                    })));
+                                },
+                            };
+                            return [2 /*return*/, rabbitMqConnection];
                         case 4:
-                            error_1 = _b.sent();
-                            console.error("Erreur in createMqttConnection :  ", error_1);
+                            error_1 = _a.sent();
+                            console.error("Erreur in createConnectionToRabbitMQ : ", error_1);
                             return [2 /*return*/, error_1];
                         case 5: return [2 /*return*/];
                     }
                 });
             });
         },
-        getMqttConnection: function () {
-            return mqttConnection;
+        getConnectionObject: function () {
+            return rabbitMqConnection;
+        },
+        enableLogging: function () {
+            isEnabled = true;
+        },
+        checkIsEnaled: function () {
+            return isEnabled;
+        },
+        disableLogging: function () {
+            isEnabled = false;
         },
         error: function (payload) {
-            mqttConnection["logs"].assertQueue("logs", {
-                durable: true,
-            });
-            mqttConnection["logs"].sendToQueue("logs", Buffer.from(JSON.stringify({
-                payload: __assign(__assign({}, payload), { level: "errors", date: new Date() }),
-            })));
+            if (!isEnabled)
+                return;
+            rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.error(payload);
         },
         debug: function (payload) {
-            if (!mqttConnection) {
-                console.warn("Make sure you created the MQTT connection successfully !");
+            if (!isEnabled)
                 return;
-            }
-            mqttConnection["logs"].assertQueue("logs", {
-                durable: true,
-            });
-            mqttConnection["logs"].sendToQueue("logs", Buffer.from(JSON.stringify({
-                payload: __assign(__assign({}, payload), { level: "debug", date: new Date() }),
-            })));
+            rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.debug(payload);
         },
     };
 })();
