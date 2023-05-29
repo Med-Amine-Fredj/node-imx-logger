@@ -46,7 +46,9 @@ const LOGGER = (function () {
           );
           if (enableReconnect) {
             console.log(
-              "=============== Retrying to reconnect to imxLogger in 30 sec ...... ==============="
+              "=============== Retrying to reconnect to imxLogger in " +
+                reconnectTimeout +
+                "MS ...... ==============="
             );
             setTimeout(async () => {
               console.log(

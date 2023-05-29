@@ -75,7 +75,9 @@ var LOGGER = (function () {
                             conn.on("error", function (error) {
                                 console.error("Erreur in createConnectionToRabbitMQ : ", error === null || error === void 0 ? void 0 : error.messgae);
                                 if (enableReconnect) {
-                                    console.log("=============== Retrying to reconnect to imxLogger in 30 sec ...... ===============");
+                                    console.log("=============== Retrying to reconnect to imxLogger in " +
+                                        reconnectTimeout +
+                                        "MS ...... ===============");
                                     setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
