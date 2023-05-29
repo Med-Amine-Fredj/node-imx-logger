@@ -7,7 +7,13 @@ import { rabbitMqConnectionType } from "./Types/rabbitMqConnectionType";
 const LOGGER = (function () {
   let rabbitMqConnection: rabbitMqConnectionType = null;
 
-  let isEnabled: boolean = true;
+  let isDebugLogsEnabled: boolean = true;
+
+  let isErrorLogsEnabled: boolean = true;
+
+  let enableReconnect: boolean = true;
+
+  let reconnectTimeout: number = 30000;
 
   let logsChannelName: string = "";
 
@@ -15,10 +21,21 @@ const LOGGER = (function () {
     async createConnectionToRabbitMQ(
       option: connectOptionsType,
       queueName: string,
-      enable?: boolean
+      extraOptions: {
+        enableDebug?: boolean;
+        enableError?: boolean;
+        enableReconnect?: boolean;
+        reconnectTimeout?: number;
+      }
     ): Promise<rabbitMqConnectionType> {
       try {
-        isEnabled = enable ?? true;
+        isDebugLogsEnabled = extraOptions?.enableDebug ?? true;
+
+        isErrorLogsEnabled = extraOptions?.enableError ?? true;
+
+        enableReconnect = extraOptions?.enableReconnect ?? true;
+
+        reconnectTimeout = extraOptions?.reconnectTimeout || 30000;
 
         const conn = await amqp.connect(option);
 
@@ -27,15 +44,22 @@ const LOGGER = (function () {
             "Erreur in createConnectionToRabbitMQ : ",
             error?.messgae
           );
-          console.log(
-            "=============== Retrying to reconnect to imxLogger in 30 sec ...... ==============="
-          );
-          setTimeout(async () => {
+          if (enableReconnect) {
             console.log(
-              "=============== Trying to reconnect to imxLogger.... ==============="
+              "=============== Retrying to reconnect to imxLogger in 30 sec ...... ==============="
             );
-            await LOGGER.createConnectionToRabbitMQ(option, queueName, enable);
-          }, 30000);
+            setTimeout(async () => {
+              console.log(
+                "=============== Trying to reconnect to imxLogger.... ==============="
+              );
+              await LOGGER.createConnectionToRabbitMQ(option, queueName, {
+                enableDebug: extraOptions?.enableDebug,
+                enableError: extraOptions?.enableError,
+                enableReconnect: extraOptions?.enableReconnect,
+                reconnectTimeout: extraOptions?.reconnectTimeout,
+              });
+            }, reconnectTimeout);
+          }
         });
 
         conn.on("disconnected", () => {
@@ -63,18 +87,41 @@ const LOGGER = (function () {
         rabbitMqConnection = {
           amqpConnection: conn,
           channelConnection: logsChannel,
-          isEnabled,
-          enableLogging() {
-            isEnabled = true;
+          errorLoggingStatus: isErrorLogsEnabled,
+          debugLoggingStatus: isDebugLogsEnabled,
+
+          enableErrorLogging() {
+            isErrorLogsEnabled = true;
           },
-          disableLogging() {
-            isEnabled = false;
+          disableErrorLogging() {
+            isErrorLogsEnabled = false;
           },
-          checkIsEnaled() {
-            return isEnabled;
+
+          enableDebugLogging() {
+            isDebugLogsEnabled = true;
           },
+
+          disableDebugLogging() {
+            isDebugLogsEnabled = false;
+          },
+
+          checkLoggingStatus() {
+            return {
+              errorLoggingStatus: isErrorLogsEnabled,
+              debugLoggingStatus: isDebugLogsEnabled,
+            };
+          },
+
+          checkErrorLoggingStatus() {
+            return isErrorLogsEnabled;
+          },
+
+          checkDebugLoggingStatus() {
+            return isDebugLogsEnabled;
+          },
+
           error(payload: messagePayloadToMqTTFromUsers) {
-            if (!isEnabled) return;
+            if (!isErrorLogsEnabled) return;
             logsChannel.sendToQueue(
               logsChannelName,
               Buffer.from(
@@ -84,8 +131,9 @@ const LOGGER = (function () {
               )
             );
           },
+
           debug(payload: messagePayloadToMqTTFromUsers) {
-            if (!isEnabled) return;
+            if (!isDebugLogsEnabled) return;
             logsChannel.sendToQueue(
               logsChannelName,
               Buffer.from(
@@ -107,25 +155,43 @@ const LOGGER = (function () {
       return rabbitMqConnection;
     },
 
-    enableLogging() {
-      isEnabled = true;
+    enableErrorLogging() {
+      isErrorLogsEnabled = true;
+    },
+    disableErrorLogging() {
+      isErrorLogsEnabled = false;
     },
 
-    checkIsEnaled() {
-      return isEnabled;
+    enableDebugLogging() {
+      isDebugLogsEnabled = true;
     },
 
-    disableLogging() {
-      isEnabled = false;
+    disableDebugLogging() {
+      isDebugLogsEnabled = false;
+    },
+
+    checkLoggingStatus() {
+      return {
+        errorLoggingStatus: isErrorLogsEnabled,
+        debugLoggingStatus: isDebugLogsEnabled,
+      };
+    },
+
+    checkErrorLoggingStatus() {
+      return isErrorLogsEnabled;
+    },
+
+    checkDebugLoggingStatus() {
+      return isDebugLogsEnabled;
     },
 
     error(payload: messagePayloadToMqTTFromUsers) {
-      if (!isEnabled) return;
+      if (!isErrorLogsEnabled) return;
       rabbitMqConnection?.error(payload);
     },
 
     debug(payload: messagePayloadToMqTTFromUsers) {
-      if (!isEnabled) return;
+      if (!isDebugLogsEnabled) return;
       rabbitMqConnection?.debug(payload);
     },
   };
