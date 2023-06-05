@@ -1,6 +1,6 @@
 import * as amqp from "amqplib";
 
-import { messagePayloadToMqTTFromUsers } from "./messagePayloadType";
+import { messagePayloadASArg } from "./messagePayloadASArg";
 
 type LoggingStatus = {
   errorLoggingStatus: boolean;
@@ -12,8 +12,8 @@ export type rabbitMqConnectionType = {
   channelConnection: amqp.Channel;
   errorLoggingStatus: boolean;
   debugLoggingStatus: boolean;
-  error(payload: messagePayloadToMqTTFromUsers): void;
-  debug(payload: messagePayloadToMqTTFromUsers): void;
+  error(payload: messagePayloadASArg): void;
+  debug(payload: messagePayloadASArg): void;
   enableErrorLogging(): void;
   disableErrorLogging(): void;
   enableDebugLogging(): void;
@@ -21,4 +21,5 @@ export type rabbitMqConnectionType = {
   checkLoggingStatus(): LoggingStatus;
   checkErrorLoggingStatus(): boolean;
   checkDebugLoggingStatus(): boolean;
+  setAppName(arg: string): void;
 } | null;
