@@ -48,6 +48,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var amqp = require("amqplib");
+var tryStringifyJSONObject_1 = require("./helpers/tryStringifyJSONObject");
 var LOGGER = (function () {
     var rabbitMqConnection = null;
     var isDebugLogsEnabled = true;
@@ -55,8 +56,9 @@ var LOGGER = (function () {
     var enableReconnect = true;
     var reconnectTimeout = 30000;
     var logsChannelName = "";
+    var app_name = "N/A";
     return {
-        createConnectionToRabbitMQ: function (option, queueName, extraOptions) {
+        createConnectionToRabbitMQ: function (option, queueName, extraOptions, appName, callBacks) {
             var _a, _b, _c;
             return __awaiter(this, void 0, void 0, function () {
                 var conn, logsChannel_1, error_1;
@@ -69,10 +71,13 @@ var LOGGER = (function () {
                             isErrorLogsEnabled = (_b = extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableError) !== null && _b !== void 0 ? _b : true;
                             enableReconnect = (_c = extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableReconnect) !== null && _c !== void 0 ? _c : true;
                             reconnectTimeout = (extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.reconnectTimeout) || 30000;
+                            app_name = appName || "N/A";
+                            logsChannelName = queueName || "logs";
                             return [4 /*yield*/, amqp.connect(option)];
                         case 1:
                             conn = _d.sent();
                             conn.on("error", function (error) {
+                                (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback) && (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback());
                                 console.error("Erreur in createConnectionToRabbitMQ : ", error === null || error === void 0 ? void 0 : error.messgae);
                                 if (enableReconnect) {
                                     console.log("=============== Retrying to reconnect to imxLogger in " +
@@ -88,6 +93,10 @@ var LOGGER = (function () {
                                                             enableError: extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableError,
                                                             enableReconnect: extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableReconnect,
                                                             reconnectTimeout: extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.reconnectTimeout,
+                                                        }, app_name, {
+                                                            onConnectCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onConnectCallback,
+                                                            onDisconnectCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onDisconnectCallback,
+                                                            onErrorCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback,
                                                         })];
                                                 case 1:
                                                     _a.sent();
@@ -99,18 +108,19 @@ var LOGGER = (function () {
                             });
                             conn.on("disconnected", function () {
                                 console.log("=============== imxNodeLogger disconnected =============== ");
+                                (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onDisconnectCallback) && (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onDisconnectCallback());
                             });
                             conn.on("connected", function () {
+                                (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onConnectCallback) && (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onConnectCallback());
                                 console.log("=============== imxNodeLogger connected ===============");
                             });
-                            logsChannelName = queueName || "logs";
                             return [4 /*yield*/, conn.createChannel()];
                         case 2:
                             logsChannel_1 = _d.sent();
                             return [4 /*yield*/, logsChannel_1.checkQueue(logsChannelName)];
                         case 3:
                             _d.sent();
-                            console.log("=============== Connected to imx Logger successfully  ===============");
+                            console.log("==================== Connected to imx Logger successfully  =======================");
                             rabbitMqConnection = {
                                 amqpConnection: conn,
                                 channelConnection: logsChannel_1,
@@ -140,18 +150,21 @@ var LOGGER = (function () {
                                 checkDebugLoggingStatus: function () {
                                     return isDebugLogsEnabled;
                                 },
+                                setAppName: function (appName) {
+                                    app_name = appName;
+                                },
                                 error: function (payload) {
                                     if (!isErrorLogsEnabled)
                                         return;
-                                    logsChannel_1.sendToQueue(logsChannelName, Buffer.from(JSON.stringify({
-                                        payload: __assign(__assign({}, payload), { level: "errors", date: new Date() }),
+                                    logsChannel_1.sendToQueue(logsChannelName, Buffer.from((0, tryStringifyJSONObject_1.default)({
+                                        payload: __assign(__assign({}, payload), { level: "errors", date: new Date(), appName: app_name }),
                                     })));
                                 },
                                 debug: function (payload) {
                                     if (!isDebugLogsEnabled)
                                         return;
-                                    logsChannel_1.sendToQueue(logsChannelName, Buffer.from(JSON.stringify({
-                                        payload: __assign(__assign({}, payload), { level: "debug", date: new Date() }),
+                                    logsChannel_1.sendToQueue(logsChannelName, Buffer.from((0, tryStringifyJSONObject_1.default)({
+                                        payload: __assign(__assign({}, payload), { level: "debug", date: new Date(), appName: app_name }),
                                     })));
                                 },
                             };
@@ -191,6 +204,9 @@ var LOGGER = (function () {
         },
         checkDebugLoggingStatus: function () {
             return isDebugLogsEnabled;
+        },
+        setAppName: function (appName) {
+            rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.setAppName(appName);
         },
         error: function (payload) {
             if (!isErrorLogsEnabled)
