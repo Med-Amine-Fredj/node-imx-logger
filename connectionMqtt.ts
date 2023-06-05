@@ -34,7 +34,7 @@ const LOGGER = (function () {
       },
       appName?: string,
       callBacks?: {
-        onErrorCallback?: Function;
+        onErrorCallback?: (error: Error) => any;
         onDisconnectCallback?: Function;
         onConnectCallback?: Function;
       }
@@ -55,7 +55,7 @@ const LOGGER = (function () {
         const conn = await amqp.connect(option);
 
         conn.on("error", (error) => {
-          callBacks?.onErrorCallback && callBacks?.onErrorCallback();
+          callBacks?.onErrorCallback && callBacks?.onErrorCallback(error);
           console.error(
             "Erreur in createConnectionToRabbitMQ : ",
             error?.messgae

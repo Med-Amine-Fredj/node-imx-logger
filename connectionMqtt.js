@@ -77,7 +77,7 @@ var LOGGER = (function () {
                         case 1:
                             conn = _d.sent();
                             conn.on("error", function (error) {
-                                (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback) && (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback());
+                                (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback) && (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback(error));
                                 console.error("Erreur in createConnectionToRabbitMQ : ", error === null || error === void 0 ? void 0 : error.messgae);
                                 if (enableReconnect) {
                                     console.log("=============== Retrying to reconnect to imxLogger in " +
