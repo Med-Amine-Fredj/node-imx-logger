@@ -37,9 +37,17 @@ const extraOption={
       reconnectTimeout: 30000 // 30 sec
 }
 
+const app_name = "app_name_example"
+
+const callBacks ={
+        onErrorCallback: (error) => console.error(error),
+        onDisconnectCallback: () => console.log("Disconnected"),
+        onConnectCallback: () => console.log("Connected")
+}
+
 async function connectToImxLogger() {
   try {
-    await imxNodeLogger.createConnectionToRabbitMQ(options, queueName,extraOption);
+    await imxNodeLogger.createConnectionToRabbitMQ(options, queueName,extraOption,app_name,callBack);
   } catch (error) {
     console.error("Error",error);
   }
@@ -61,20 +69,14 @@ async function connectToImxLogger() {
     - `enableError` (boolean): Set to `true` if you want to enable error logs. Set to `false` if you want to disable error logs.
     - `enableReconnect` (boolean): Set to `true` if you want the logger to automatically reconnect in case of errors. Set to `false` if you don't want automatic reconnection.
     - `reconnectTimeout` (number): The delay (in milliseconds) between reconnection attempts. This property is only applicable if `enableReconnect` is set to `true`.
-      
-      
-  
+
   The `connectToImxLogger()` function attempts to create a connection to the RabbitMQ server using the provided options and extra options. If an error occurs during the connection process, the error will be logged to the console.
-  
+
   Please note that you need to replace the placeholder values (`localhost`, `5672`, `user_name`, `password`, `queueName`) with the actual values specific to your environment.
-  
+
   That's it! You can now use this code to connect to the IMX Logger and start logging your application's debug and error messages.
-  
-  
 
 Now you can use or import the imxNodeLogger everywhere in the app with default existing methods byo leverage the imxNodeLogger in your application and access its default existing methods, you can either use or import it. The imxNodeLogger is built on the `amqplib` library, which provides the underlying functionality. You can find the `amqplib` package on npm [here](https://www.npmjs.com/package/amqplib).
-
-
 
 Here are the additional functions provided by the `connectToImxLogger` returned by the `imxNodeLogger.createMqttConnection()` method, along with their descriptions:
 
@@ -96,7 +98,7 @@ Here are the additional functions provided by the `connectToImxLogger` returned 
 
 - `checkDebugLoggingStatus():boolean` : Invoke this function to check whether the debug logging is currently enabled or disabled.
 
-
+- `setAppName(app_name: string):void` : Invoke this function to set the app name passed in logs sending.
 
 This type is used as the payload when logging error and debug messages to the connected RabbitMQ server. It consists of the following properties:
 
@@ -104,25 +106,28 @@ This type is used as the payload when logging error and debug messages to the co
 
 - `context` (required): A string specifying the context or category of the log, providing additional information about where the log is originating from.
 
-- `appName` (required): A string indicating the name of the application or component generating the log.
-
 - `user` (optional): An optional string representing the user associated with the log. This property can be omitted if the log is not specific to a user.
 
 - `extra` (optional): An optional property that allows for additional data or context to be included in the log. This can be of any type (`any`), accommodating various custom data structures or objects.
-  
-  
 
 Please note that the `rabbitMqConnectionType` can also be `null` if the connection to the RabbitMQ server was unsuccessful.
 
-
-
 ### Examples
+
+
+
+##### To set the app name  :
+
+```
+ imxNodeLogger.setAppName("app_name_example");
+```
+
+
 
 ##### To send debug logs use :
 
 ```
  imxNodeLogger.debug({
-        appName: "appname_example",
         context: "context_example",
         message: `message_example`,
         user?: "user_example",
@@ -133,7 +138,6 @@ Please note that the `rabbitMqConnectionType` can also be `null` if the connecti
 
 ```
  imxNodeLogger.error({
-        appName: "appname_example",
         context: "context_example",
         message: `message_example`,
         user?: "user_example",
