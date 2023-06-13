@@ -54,12 +54,9 @@ const LOGGER = (function () {
 
         const conn = await amqp.connect(option);
 
-        conn.on("error", (error) => {
+        conn?.on("error", (error) => {
           callBacks?.onErrorCallback && callBacks?.onErrorCallback(error);
-          console.error(
-            "Erreur in createConnectionToRabbitMQ : ",
-            error?.messgae
-          );
+          console.error("Erreur in createConnectionToRabbitMQ : ", error);
           if (enableReconnect) {
             console.log(
               "=============== Retrying to reconnect to imxLogger in " +
@@ -71,7 +68,7 @@ const LOGGER = (function () {
                 "=============== Trying to reconnect to imxLogger.... ==============="
               );
               try {
-                await LOGGER.createConnectionToRabbitMQ(
+                LOGGER.createConnectionToRabbitMQ(
                   option,
                   queueName,
                   {
@@ -94,23 +91,23 @@ const LOGGER = (function () {
           }
         });
 
-        conn.on("disconnected", () => {
+        conn?.on("disconnected", () => {
           console.log(
             "=============== imxNodeLogger disconnected =============== "
           );
           callBacks?.onDisconnectCallback && callBacks?.onDisconnectCallback();
         });
 
-        conn.on("connected", () => {
+        conn?.on("connected", () => {
           callBacks?.onConnectCallback && callBacks?.onConnectCallback();
           console.log(
             "=============== imxNodeLogger connected ==============="
           );
         });
 
-        const logsChannel = await conn.createChannel();
+        const logsChannel = await conn?.createChannel();
 
-        await logsChannel.checkQueue(logsChannelName);
+        await logsChannel?.checkQueue(logsChannelName);
 
         console.log(
           "==================== Connected to imx Logger successfully  ======================="
@@ -158,42 +155,57 @@ const LOGGER = (function () {
 
           error(payload: messagePayloadASArg) {
             if (!isErrorLogsEnabled) return;
-            logsChannel.sendToQueue(
-              logsChannelName,
-              Buffer.from(
-                tryStringifyJSONObject({
-                  payload: {
-                    ...payload,
-                    level: "errors",
-                    date: new Date(),
-                    appName: app_name,
-                  },
-                })
-              )
-            );
+            if (!logsChannel) {
+              console.error("Channel is not available. Cannot send error log.");
+              return;
+            }
+            try {
+              logsChannel?.sendToQueue(
+                logsChannelName,
+                Buffer.from(
+                  tryStringifyJSONObject({
+                    payload: {
+                      ...payload,
+                      level: "errors",
+                      date: new Date(),
+                      appName: app_name,
+                    },
+                  })
+                )
+              );
+            } catch (error) {
+              console.error("Error sending error logs : ", error);
+            }
           },
 
           debug(payload: messagePayloadASArg) {
             if (!isDebugLogsEnabled) return;
-            logsChannel.sendToQueue(
-              logsChannelName,
-              Buffer.from(
-                tryStringifyJSONObject({
-                  payload: {
-                    ...payload,
-                    level: "debug",
-                    date: new Date(),
-                    appName: app_name,
-                  },
-                })
-              )
-            );
+            if (!logsChannel) {
+              console.error("Channel is not available. Cannot send error log.");
+              return;
+            }
+            try {
+              logsChannel?.sendToQueue(
+                logsChannelName,
+                Buffer.from(
+                  tryStringifyJSONObject({
+                    payload: {
+                      ...payload,
+                      level: "debug",
+                      date: new Date(),
+                      appName: app_name,
+                    },
+                  })
+                )
+              );
+            } catch (error) {
+              console.error("Error sending debug logs : ", error);
+            }
           },
         };
         return rabbitMqConnection;
       } catch (error) {
         console.error("Erreur in createConnectionToRabbitMQ : ", error);
-        return error;
       }
     },
 
@@ -237,10 +249,18 @@ const LOGGER = (function () {
 
     error(payload: messagePayloadASArg) {
       if (!isErrorLogsEnabled) return;
+      if (!rabbitMqConnection) {
+        console.error("Connection to rabbitMq not established !");
+        return;
+      }
       rabbitMqConnection?.error(payload);
     },
 
     debug(payload: messagePayloadASArg) {
+      if (!rabbitMqConnection) {
+        console.error("Connection to rabbitMq not established !");
+        return;
+      }
       if (!isDebugLogsEnabled) return;
       rabbitMqConnection?.debug(payload);
     },

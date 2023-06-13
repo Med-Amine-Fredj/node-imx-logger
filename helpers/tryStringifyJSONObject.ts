@@ -35,7 +35,7 @@ function tryStringifyJSONObject(object: object) {
         message:
           "Erreur in IMX LOGGER FOR NODE,  payload message while sending logs : input ====>  ",
         extra: object,
-        level: "debug",
+        level: "errors",
         date: new Date(),
       },
     };
