@@ -70,22 +70,26 @@ const LOGGER = (function () {
               console.log(
                 "=============== Trying to reconnect to imxLogger.... ==============="
               );
-              await LOGGER.createConnectionToRabbitMQ(
-                option,
-                queueName,
-                {
-                  enableDebug: extraOptions?.enableDebug,
-                  enableError: extraOptions?.enableError,
-                  enableReconnect: extraOptions?.enableReconnect,
-                  reconnectTimeout: extraOptions?.reconnectTimeout,
-                },
-                app_name,
-                {
-                  onConnectCallback: callBacks?.onConnectCallback,
-                  onDisconnectCallback: callBacks?.onDisconnectCallback,
-                  onErrorCallback: callBacks?.onErrorCallback,
-                }
-              );
+              try {
+                await LOGGER.createConnectionToRabbitMQ(
+                  option,
+                  queueName,
+                  {
+                    enableDebug: extraOptions?.enableDebug,
+                    enableError: extraOptions?.enableError,
+                    enableReconnect: extraOptions?.enableReconnect,
+                    reconnectTimeout: extraOptions?.reconnectTimeout,
+                  },
+                  app_name,
+                  {
+                    onConnectCallback: callBacks?.onConnectCallback,
+                    onDisconnectCallback: callBacks?.onDisconnectCallback,
+                    onErrorCallback: callBacks?.onErrorCallback,
+                  }
+                );
+              } catch (error) {
+                console.error("Error createConnectionToRabbitMQ", error);
+              }
             }, reconnectTimeout);
           }
         });

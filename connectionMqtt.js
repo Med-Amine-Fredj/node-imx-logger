@@ -84,10 +84,14 @@ var LOGGER = (function () {
                                         reconnectTimeout +
                                         "MS ...... ===============");
                                     setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                                        var error_2;
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
                                                 case 0:
                                                     console.log("=============== Trying to reconnect to imxLogger.... ===============");
+                                                    _a.label = 1;
+                                                case 1:
+                                                    _a.trys.push([1, 3, , 4]);
                                                     return [4 /*yield*/, LOGGER.createConnectionToRabbitMQ(option, queueName, {
                                                             enableDebug: extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableDebug,
                                                             enableError: extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableError,
@@ -98,9 +102,14 @@ var LOGGER = (function () {
                                                             onDisconnectCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onDisconnectCallback,
                                                             onErrorCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback,
                                                         })];
-                                                case 1:
+                                                case 2:
                                                     _a.sent();
-                                                    return [2 /*return*/];
+                                                    return [3 /*break*/, 4];
+                                                case 3:
+                                                    error_2 = _a.sent();
+                                                    console.error("Error createConnectionToRabbitMQ", error_2);
+                                                    return [3 /*break*/, 4];
+                                                case 4: return [2 /*return*/];
                                             }
                                         });
                                     }); }, reconnectTimeout);
