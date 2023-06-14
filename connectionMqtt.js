@@ -230,14 +230,14 @@ var LOGGER = (function () {
             if (!isErrorLogsEnabled)
                 return;
             if (!rabbitMqConnection) {
-                console.error("Connection to rabbitMq not established !");
+                // console.error("Connection to rabbitMq not established !");
                 return;
             }
             rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.error(payload);
         },
         debug: function (payload) {
             if (!rabbitMqConnection) {
-                console.error("Connection to rabbitMq not established !");
+                // console.error("Connection to rabbitMq not established !");
                 return;
             }
             if (!isDebugLogsEnabled)

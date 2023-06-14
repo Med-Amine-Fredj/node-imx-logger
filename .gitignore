@@ -68,3 +68,6 @@ android/
 %ProgramData%
 
 %ProgramData%/*
+
+
+node_modules

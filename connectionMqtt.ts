@@ -250,7 +250,7 @@ const LOGGER = (function () {
     error(payload: messagePayloadASArg) {
       if (!isErrorLogsEnabled) return;
       if (!rabbitMqConnection) {
-        console.error("Connection to rabbitMq not established !");
+        // console.error("Connection to rabbitMq not established !");
         return;
       }
       rabbitMqConnection?.error(payload);
@@ -258,7 +258,7 @@ const LOGGER = (function () {
 
     debug(payload: messagePayloadASArg) {
       if (!rabbitMqConnection) {
-        console.error("Connection to rabbitMq not established !");
+        // console.error("Connection to rabbitMq not established !");
         return;
       }
       if (!isDebugLogsEnabled) return;
