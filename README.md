@@ -35,6 +35,8 @@ const extraOption={
       enableError: true,
       enableReconnect: true,
       reconnectTimeout: 30000 // 30 sec
+      logOnly: true/false // if you want to disable the send to queue 
+                           // and do only console.log without event connecting to queue 
 }
 
 const app_name = "app_name_example"
@@ -69,11 +71,11 @@ async function connectToImxLogger() {
     - `enableError` (boolean): Set to `true` if you want to enable error logs. Set to `false` if you want to disable error logs.
     - `enableReconnect` (boolean): Set to `true` if you want the logger to automatically reconnect in case of errors. Set to `false` if you don't want automatic reconnection.
     - `reconnectTimeout` (number): The delay (in milliseconds) between reconnection attempts. This property is only applicable if `enableReconnect` is set to `true`.
-
+  
   The `connectToImxLogger()` function attempts to create a connection to the RabbitMQ server using the provided options and extra options. If an error occurs during the connection process, the error will be logged to the console.
-
+  
   Please note that you need to replace the placeholder values (`localhost`, `5672`, `user_name`, `password`, `queueName`) with the actual values specific to your environment.
-
+  
   That's it! You can now use this code to connect to the IMX Logger and start logging your application's debug and error messages.
 
 Now you can use or import the imxNodeLogger everywhere in the app with default existing methods byo leverage the imxNodeLogger in your application and access its default existing methods, you can either use or import it. The imxNodeLogger is built on the `amqplib` library, which provides the underlying functionality. You can find the `amqplib` package on npm [here](https://www.npmjs.com/package/amqplib).
@@ -114,15 +116,11 @@ Please note that the `rabbitMqConnectionType` can also be `null` if the connecti
 
 ### Examples
 
-
-
 ##### To set the app name  :
 
 ```
  imxNodeLogger.setAppName("app_name_example");
 ```
-
-
 
 ##### To send debug logs use :
 

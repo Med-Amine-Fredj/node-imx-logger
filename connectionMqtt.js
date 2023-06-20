@@ -57,25 +57,73 @@ var LOGGER = (function () {
     var reconnectTimeout = 30000;
     var logsChannelName = "";
     var app_name = "N/A";
+    var isLogOnly = false;
     return {
         createConnectionToRabbitMQ: function (option, queueName, extraOptions, appName, callBacks) {
-            var _a, _b, _c;
+            var _a, _b, _c, _d;
             return __awaiter(this, void 0, void 0, function () {
                 var conn, logsChannel_1, error_1;
                 var _this = this;
-                return __generator(this, function (_d) {
-                    switch (_d.label) {
+                return __generator(this, function (_e) {
+                    switch (_e.label) {
                         case 0:
-                            _d.trys.push([0, 4, , 5]);
+                            _e.trys.push([0, 4, , 5]);
                             isDebugLogsEnabled = (_a = extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableDebug) !== null && _a !== void 0 ? _a : true;
                             isErrorLogsEnabled = (_b = extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableError) !== null && _b !== void 0 ? _b : true;
                             enableReconnect = (_c = extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableReconnect) !== null && _c !== void 0 ? _c : true;
                             reconnectTimeout = (extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.reconnectTimeout) || 30000;
+                            isLogOnly = (_d = extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.logOnly) !== null && _d !== void 0 ? _d : false;
                             app_name = appName || "N/A";
                             logsChannelName = queueName || "logs";
+                            if (isLogOnly) {
+                                rabbitMqConnection = {
+                                    amqpConnection: null,
+                                    channelConnection: null,
+                                    errorLoggingStatus: isErrorLogsEnabled,
+                                    debugLoggingStatus: isDebugLogsEnabled,
+                                    enableErrorLogging: function () {
+                                        isErrorLogsEnabled = true;
+                                    },
+                                    disableErrorLogging: function () {
+                                        isErrorLogsEnabled = false;
+                                    },
+                                    enableDebugLogging: function () {
+                                        isDebugLogsEnabled = true;
+                                    },
+                                    disableDebugLogging: function () {
+                                        isDebugLogsEnabled = false;
+                                    },
+                                    checkLoggingStatus: function () {
+                                        return {
+                                            errorLoggingStatus: isErrorLogsEnabled,
+                                            debugLoggingStatus: isDebugLogsEnabled,
+                                        };
+                                    },
+                                    checkErrorLoggingStatus: function () {
+                                        return isErrorLogsEnabled;
+                                    },
+                                    checkDebugLoggingStatus: function () {
+                                        return isDebugLogsEnabled;
+                                    },
+                                    setAppName: function (appName) {
+                                        app_name = appName;
+                                    },
+                                    error: function (payload) {
+                                        if (!isErrorLogsEnabled)
+                                            return;
+                                        console.log(__assign(__assign({}, payload), { level: "errors", date: new Date(), appName: app_name }));
+                                    },
+                                    debug: function (payload) {
+                                        if (!isDebugLogsEnabled)
+                                            return;
+                                        console.log(__assign(__assign({}, payload), { level: "debug", date: new Date(), appName: app_name }));
+                                    },
+                                };
+                                return [2 /*return*/, rabbitMqConnection];
+                            }
                             return [4 /*yield*/, amqp.connect(option)];
                         case 1:
-                            conn = _d.sent();
+                            conn = _e.sent();
                             conn === null || conn === void 0 ? void 0 : conn.on("error", function (error) {
                                 (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback) && (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback(error));
                                 console.error("Erreur in createConnectionToRabbitMQ : ", error);
@@ -92,6 +140,7 @@ var LOGGER = (function () {
                                                     enableError: extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableError,
                                                     enableReconnect: extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableReconnect,
                                                     reconnectTimeout: extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.reconnectTimeout,
+                                                    logOnly: extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.logOnly,
                                                 }, app_name, {
                                                     onConnectCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onConnectCallback,
                                                     onDisconnectCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onDisconnectCallback,
@@ -116,10 +165,10 @@ var LOGGER = (function () {
                             });
                             return [4 /*yield*/, (conn === null || conn === void 0 ? void 0 : conn.createChannel())];
                         case 2:
-                            logsChannel_1 = _d.sent();
+                            logsChannel_1 = _e.sent();
                             return [4 /*yield*/, (logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.checkQueue(logsChannelName))];
                         case 3:
-                            _d.sent();
+                            _e.sent();
                             console.log("==================== Connected to imx Logger successfully  =======================");
                             rabbitMqConnection = {
                                 amqpConnection: conn,
@@ -188,7 +237,7 @@ var LOGGER = (function () {
                             };
                             return [2 /*return*/, rabbitMqConnection];
                         case 4:
-                            error_1 = _d.sent();
+                            error_1 = _e.sent();
                             console.error("Erreur in createConnectionToRabbitMQ : ", error_1);
                             return [3 /*break*/, 5];
                         case 5: return [2 /*return*/];
@@ -229,19 +278,17 @@ var LOGGER = (function () {
         error: function (payload) {
             if (!isErrorLogsEnabled)
                 return;
-            if (!rabbitMqConnection) {
-                // console.error("Connection to rabbitMq not established !");
+            if (!rabbitMqConnection && !isLogOnly) {
                 return;
             }
             rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.error(payload);
         },
         debug: function (payload) {
-            if (!rabbitMqConnection) {
-                // console.error("Connection to rabbitMq not established !");
-                return;
-            }
             if (!isDebugLogsEnabled)
                 return;
+            if (!rabbitMqConnection && !isLogOnly) {
+                return;
+            }
             rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.debug(payload);
         },
     };

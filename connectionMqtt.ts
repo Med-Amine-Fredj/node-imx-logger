@@ -5,6 +5,7 @@ import { connectOptionsType } from "./Types/connectionOption";
 import { messagePayloadASArg } from "./Types/messagePayloadASArg";
 
 import { rabbitMqConnectionType } from "./Types/rabbitMqConnectionType";
+
 import tryStringifyJSONObject from "./helpers/tryStringifyJSONObject";
 
 const LOGGER = (function () {
@@ -22,6 +23,8 @@ const LOGGER = (function () {
 
   let app_name: string = "N/A";
 
+  let isLogOnly: boolean = false;
+
   return {
     async createConnectionToRabbitMQ(
       option: connectOptionsType,
@@ -31,6 +34,7 @@ const LOGGER = (function () {
         enableError?: boolean;
         enableReconnect?: boolean;
         reconnectTimeout?: number;
+        logOnly?: boolean;
       },
       appName?: string,
       callBacks?: {
@@ -48,9 +52,75 @@ const LOGGER = (function () {
 
         reconnectTimeout = extraOptions?.reconnectTimeout || 30000;
 
+        isLogOnly = extraOptions?.logOnly ?? false;
+
         app_name = appName || "N/A";
 
         logsChannelName = queueName || "logs";
+
+        if (isLogOnly) {
+          rabbitMqConnection = {
+            amqpConnection: null,
+            channelConnection: null,
+            errorLoggingStatus: isErrorLogsEnabled,
+            debugLoggingStatus: isDebugLogsEnabled,
+
+            enableErrorLogging() {
+              isErrorLogsEnabled = true;
+            },
+            disableErrorLogging() {
+              isErrorLogsEnabled = false;
+            },
+
+            enableDebugLogging() {
+              isDebugLogsEnabled = true;
+            },
+
+            disableDebugLogging() {
+              isDebugLogsEnabled = false;
+            },
+
+            checkLoggingStatus() {
+              return {
+                errorLoggingStatus: isErrorLogsEnabled,
+                debugLoggingStatus: isDebugLogsEnabled,
+              };
+            },
+
+            checkErrorLoggingStatus() {
+              return isErrorLogsEnabled;
+            },
+
+            checkDebugLoggingStatus() {
+              return isDebugLogsEnabled;
+            },
+
+            setAppName(appName: string) {
+              app_name = appName;
+            },
+
+            error(payload: messagePayloadASArg) {
+              if (!isErrorLogsEnabled) return;
+              console.log({
+                ...payload,
+                level: "errors",
+                date: new Date(),
+                appName: app_name,
+              });
+            },
+
+            debug(payload: messagePayloadASArg) {
+              if (!isDebugLogsEnabled) return;
+              console.log({
+                ...payload,
+                level: "debug",
+                date: new Date(),
+                appName: app_name,
+              });
+            },
+          };
+          return rabbitMqConnection;
+        }
 
         const conn = await amqp.connect(option);
 
@@ -76,6 +146,7 @@ const LOGGER = (function () {
                     enableError: extraOptions?.enableError,
                     enableReconnect: extraOptions?.enableReconnect,
                     reconnectTimeout: extraOptions?.reconnectTimeout,
+                    logOnly: extraOptions?.logOnly,
                   },
                   app_name,
                   {
@@ -249,19 +320,17 @@ const LOGGER = (function () {
 
     error(payload: messagePayloadASArg) {
       if (!isErrorLogsEnabled) return;
-      if (!rabbitMqConnection) {
-        // console.error("Connection to rabbitMq not established !");
+      if (!rabbitMqConnection && !isLogOnly) {
         return;
       }
       rabbitMqConnection?.error(payload);
     },
 
     debug(payload: messagePayloadASArg) {
-      if (!rabbitMqConnection) {
-        // console.error("Connection to rabbitMq not established !");
+      if (!isDebugLogsEnabled) return;
+      if (!rabbitMqConnection && !isLogOnly) {
         return;
       }
-      if (!isDebugLogsEnabled) return;
       rabbitMqConnection?.debug(payload);
     },
   };
