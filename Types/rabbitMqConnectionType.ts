@@ -8,8 +8,8 @@ type LoggingStatus = {
 };
 
 export type rabbitMqConnectionType = {
-  amqpConnection: amqp.Connection;
-  channelConnection: amqp.Channel;
+  amqpConnection: amqp.Connection | null;
+  channelConnection: amqp.Channel | null;
   errorLoggingStatus: boolean;
   debugLoggingStatus: boolean;
   error(payload: messagePayloadASArg): void;

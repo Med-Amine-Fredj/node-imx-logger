@@ -42,7 +42,7 @@ const LOGGER = (function () {
         onDisconnectCallback?: Function;
         onConnectCallback?: Function;
       }
-    ): Promise<rabbitMqConnectionType> {
+    ): Promise<rabbitMqConnectionType | undefined> {
       try {
         isDebugLogsEnabled = extraOptions?.enableDebug ?? true;
 
