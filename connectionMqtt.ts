@@ -138,7 +138,7 @@ const LOGGER = (function () {
                 "=============== Trying to reconnect to imxLogger.... ==============="
               );
               try {
-                LOGGER.createConnectionToRabbitMQ(
+                await LOGGER.createConnectionToRabbitMQ(
                   option,
                   queueName,
                   {
@@ -179,6 +179,125 @@ const LOGGER = (function () {
         const logsChannel = await conn?.createChannel();
 
         await logsChannel?.checkQueue(logsChannelName);
+
+        logsChannel.on("close", () => {
+          console.error(
+            "Erreur in createConnectionToRabbitMQ : Channel Closed "
+          );
+          if (enableReconnect) {
+            console.log(
+              "=============== Retrying to reconnect to imxLogger in " +
+                reconnectTimeout +
+                "MS ...... ==============="
+            );
+            setTimeout(async () => {
+              console.log(
+                "=============== Trying to reconnect to imxLogger.... ==============="
+              );
+              try {
+                await LOGGER.createConnectionToRabbitMQ(
+                  option,
+                  queueName,
+                  {
+                    enableDebug: extraOptions?.enableDebug,
+                    enableError: extraOptions?.enableError,
+                    enableReconnect: extraOptions?.enableReconnect,
+                    reconnectTimeout: extraOptions?.reconnectTimeout,
+                    logOnly: extraOptions?.logOnly,
+                  },
+                  app_name,
+                  {
+                    onConnectCallback: callBacks?.onConnectCallback,
+                    onDisconnectCallback: callBacks?.onDisconnectCallback,
+                    onErrorCallback: callBacks?.onErrorCallback,
+                  }
+                );
+              } catch (error) {
+                console.error("Error createConnectionToRabbitMQ", error);
+              }
+            }, reconnectTimeout);
+          }
+        });
+
+        logsChannel.on("error", (error) => {
+          console.error(
+            "Erreur in createConnectionToRabbitMQ : Channel Error ",
+            error?.message
+          );
+          if (enableReconnect) {
+            console.log(
+              "=============== Retrying to reconnect to imxLogger in " +
+                reconnectTimeout +
+                "MS ...... ==============="
+            );
+            setTimeout(async () => {
+              console.log(
+                "=============== Trying to reconnect to imxLogger.... ==============="
+              );
+              try {
+                await LOGGER.createConnectionToRabbitMQ(
+                  option,
+                  queueName,
+                  {
+                    enableDebug: extraOptions?.enableDebug,
+                    enableError: extraOptions?.enableError,
+                    enableReconnect: extraOptions?.enableReconnect,
+                    reconnectTimeout: extraOptions?.reconnectTimeout,
+                    logOnly: extraOptions?.logOnly,
+                  },
+                  app_name,
+                  {
+                    onConnectCallback: callBacks?.onConnectCallback,
+                    onDisconnectCallback: callBacks?.onDisconnectCallback,
+                    onErrorCallback: callBacks?.onErrorCallback,
+                  }
+                );
+              } catch (error) {
+                console.error("Error createConnectionToRabbitMQ", error);
+              }
+            }, reconnectTimeout);
+          }
+        });
+
+        logsChannel.on("blocked", (reason) => {
+          console.error(
+            "Erreur in createConnectionToRabbitMQ : Channel Blocked ",
+            reason
+          );
+          if (enableReconnect) {
+            console.log(
+              "=============== Retrying to reconnect to imxLogger in " +
+                reconnectTimeout +
+                "MS ...... ==============="
+            );
+            setTimeout(async () => {
+              console.log(
+                "=============== Trying to reconnect to imxLogger.... ==============="
+              );
+              try {
+                await LOGGER.createConnectionToRabbitMQ(
+                  option,
+                  queueName,
+                  {
+                    enableDebug: extraOptions?.enableDebug,
+                    enableError: extraOptions?.enableError,
+                    enableReconnect: extraOptions?.enableReconnect,
+                    reconnectTimeout: extraOptions?.reconnectTimeout,
+                    logOnly: extraOptions?.logOnly,
+                  },
+                  app_name,
+                  {
+                    onConnectCallback: callBacks?.onConnectCallback,
+                    onDisconnectCallback: callBacks?.onDisconnectCallback,
+                    onErrorCallback: callBacks?.onErrorCallback,
+                  }
+                );
+              } catch (error) {
+                console.error("Error createConnectionToRabbitMQ", error);
+              }
+            }, reconnectTimeout);
+          }
+        });
 
         console.log(
           "==================== Connected to imx Logger successfully  ======================="
@@ -228,6 +347,39 @@ const LOGGER = (function () {
             if (!isErrorLogsEnabled) return;
             if (!logsChannel) {
               console.error("Channel is not available. Cannot send error log.");
+              if (enableReconnect) {
+                console.log(
+                  "=============== Retrying to reconnect to imxLogger in " +
+                    reconnectTimeout +
+                    "MS ...... ==============="
+                );
+                setTimeout(async () => {
+                  console.log(
+                    "=============== Trying to reconnect to imxLogger.... ==============="
+                  );
+                  try {
+                    LOGGER.createConnectionToRabbitMQ(
+                      option,
+                      queueName,
+                      {
+                        enableDebug: extraOptions?.enableDebug,
+                        enableError: extraOptions?.enableError,
+                        enableReconnect: extraOptions?.enableReconnect,
+                        reconnectTimeout: extraOptions?.reconnectTimeout,
+                        logOnly: extraOptions?.logOnly,
+                      },
+                      app_name,
+                      {
+                        onConnectCallback: callBacks?.onConnectCallback,
+                        onDisconnectCallback: callBacks?.onDisconnectCallback,
+                        onErrorCallback: callBacks?.onErrorCallback,
+                      }
+                    );
+                  } catch (error) {
+                    console.error("Error createConnectionToRabbitMQ", error);
+                  }
+                }, reconnectTimeout);
+              }
               return;
             }
             try {
@@ -246,6 +398,39 @@ const LOGGER = (function () {
               );
             } catch (error) {
               console.error("Error sending error logs : ", error);
+              if (enableReconnect) {
+                console.log(
+                  "=============== Retrying to reconnect to imxLogger in " +
+                    reconnectTimeout +
+                    "MS ...... ==============="
+                );
+                setTimeout(async () => {
+                  console.log(
+                    "=============== Trying to reconnect to imxLogger.... ==============="
+                  );
+                  try {
+                    LOGGER.createConnectionToRabbitMQ(
+                      option,
+                      queueName,
+                      {
+                        enableDebug: extraOptions?.enableDebug,
+                        enableError: extraOptions?.enableError,
+                        enableReconnect: extraOptions?.enableReconnect,
+                        reconnectTimeout: extraOptions?.reconnectTimeout,
+                        logOnly: extraOptions?.logOnly,
+                      },
+                      app_name,
+                      {
+                        onConnectCallback: callBacks?.onConnectCallback,
+                        onDisconnectCallback: callBacks?.onDisconnectCallback,
+                        onErrorCallback: callBacks?.onErrorCallback,
+                      }
+                    );
+                  } catch (error) {
+                    console.error("Error createConnectionToRabbitMQ", error);
+                  }
+                }, reconnectTimeout);
+              }
             }
           },
 
@@ -253,6 +438,39 @@ const LOGGER = (function () {
             if (!isDebugLogsEnabled) return;
             if (!logsChannel) {
               console.error("Channel is not available. Cannot send error log.");
+              if (enableReconnect) {
+                console.log(
+                  "=============== Retrying to reconnect to imxLogger in " +
+                    reconnectTimeout +
+                    "MS ...... ==============="
+                );
+                setTimeout(async () => {
+                  console.log(
+                    "=============== Trying to reconnect to imxLogger.... ==============="
+                  );
+                  try {
+                    LOGGER.createConnectionToRabbitMQ(
+                      option,
+                      queueName,
+                      {
+                        enableDebug: extraOptions?.enableDebug,
+                        enableError: extraOptions?.enableError,
+                        enableReconnect: extraOptions?.enableReconnect,
+                        reconnectTimeout: extraOptions?.reconnectTimeout,
+                        logOnly: extraOptions?.logOnly,
+                      },
+                      app_name,
+                      {
+                        onConnectCallback: callBacks?.onConnectCallback,
+                        onDisconnectCallback: callBacks?.onDisconnectCallback,
+                        onErrorCallback: callBacks?.onErrorCallback,
+                      }
+                    );
+                  } catch (error) {
+                    console.error("Error createConnectionToRabbitMQ", error);
+                  }
+                }, reconnectTimeout);
+              }
               return;
             }
             try {
@@ -271,12 +489,78 @@ const LOGGER = (function () {
               );
             } catch (error) {
               console.error("Error sending debug logs : ", error);
+              if (enableReconnect) {
+                console.log(
+                  "=============== Retrying to reconnect to imxLogger in " +
+                    reconnectTimeout +
+                    "MS ...... ==============="
+                );
+                setTimeout(async () => {
+                  console.log(
+                    "=============== Trying to reconnect to imxLogger.... ==============="
+                  );
+                  try {
+                    LOGGER.createConnectionToRabbitMQ(
+                      option,
+                      queueName,
+                      {
+                        enableDebug: extraOptions?.enableDebug,
+                        enableError: extraOptions?.enableError,
+                        enableReconnect: extraOptions?.enableReconnect,
+                        reconnectTimeout: extraOptions?.reconnectTimeout,
+                        logOnly: extraOptions?.logOnly,
+                      },
+                      app_name,
+                      {
+                        onConnectCallback: callBacks?.onConnectCallback,
+                        onDisconnectCallback: callBacks?.onDisconnectCallback,
+                        onErrorCallback: callBacks?.onErrorCallback,
+                      }
+                    );
+                  } catch (error) {
+                    console.error("Error createConnectionToRabbitMQ", error);
+                  }
+                }, reconnectTimeout);
+              }
             }
           },
         };
         return rabbitMqConnection;
       } catch (error) {
         console.error("Erreur in createConnectionToRabbitMQ : ", error);
+        if (enableReconnect) {
+          console.log(
+            "=============== Retrying to reconnect to imxLogger in " +
+              reconnectTimeout +
+              "MS ...... ==============="
+          );
+          setTimeout(async () => {
+            console.log(
+              "=============== Trying to reconnect to imxLogger.... ==============="
+            );
+            try {
+              LOGGER.createConnectionToRabbitMQ(
+                option,
+                queueName,
+                {
+                  enableDebug: extraOptions?.enableDebug,
+                  enableError: extraOptions?.enableError,
+                  enableReconnect: extraOptions?.enableReconnect,
+                  reconnectTimeout: extraOptions?.reconnectTimeout,
+                  logOnly: extraOptions?.logOnly,
+                },
+                app_name,
+                {
+                  onConnectCallback: callBacks?.onConnectCallback,
+                  onDisconnectCallback: callBacks?.onDisconnectCallback,
+                  onErrorCallback: callBacks?.onErrorCallback,
+                }
+              );
+            } catch (error) {
+              console.error("Error createConnectionToRabbitMQ", error);
+            }
+          }, reconnectTimeout);
+        }
       }
     },
 
