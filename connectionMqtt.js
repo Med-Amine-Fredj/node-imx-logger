@@ -237,7 +237,7 @@ var LOGGER = (function () {
                                     logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.emit("error", { message: "Channel Closed" });
                                 }
                             });
-                            logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.consume(logsChannelName, function (message) { });
+                            // logsChannel?.consume(logsChannelName, (message) => {});
                             console.log("==================== Connected to imx Logger successfully  =======================");
                             rabbitMqConnection = {
                                 amqpConnection: conn_1,

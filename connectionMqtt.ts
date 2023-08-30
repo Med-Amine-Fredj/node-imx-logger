@@ -251,7 +251,7 @@ const LOGGER = (function () {
           }
         });
 
-        logsChannel?.consume(logsChannelName, (message) => {});
+        // logsChannel?.consume(logsChannelName, (message) => {});
 
         console.log(
           "==================== Connected to imx Logger successfully  ======================="
