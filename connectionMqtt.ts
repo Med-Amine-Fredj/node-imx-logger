@@ -322,7 +322,7 @@ const LOGGER = (function () {
               // logsChannel
               //   ? logsChannel?.emit("error", error)
               //   : conn && conn?.emit("error", error);
-              console.error("Error sending debug logs : ", error);
+              console.error("Error sending debug logs : ", error?.message);
             }
           },
 
@@ -350,7 +350,7 @@ const LOGGER = (function () {
               // logsChannel
               //   ? logsChannel?.emit("error", error)
               //   : conn && conn?.emit("error", error);
-              console.error("Error sending debug logs : ", error);
+              console.error("Error sending debug logs : ", error?.message);
             }
           },
         };

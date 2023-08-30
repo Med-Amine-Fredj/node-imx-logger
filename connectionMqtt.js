@@ -287,7 +287,7 @@ var LOGGER = (function () {
                                         // logsChannel
                                         //   ? logsChannel?.emit("error", error)
                                         //   : conn && conn?.emit("error", error);
-                                        console.error("Error sending debug logs : ", error);
+                                        console.error("Error sending debug logs : ", error === null || error === void 0 ? void 0 : error.message);
                                     }
                                 },
                                 debug: function (payload) {
@@ -306,7 +306,7 @@ var LOGGER = (function () {
                                         // logsChannel
                                         //   ? logsChannel?.emit("error", error)
                                         //   : conn && conn?.emit("error", error);
-                                        console.error("Error sending debug logs : ", error);
+                                        console.error("Error sending debug logs : ", error === null || error === void 0 ? void 0 : error.message);
                                     }
                                 },
                             };
