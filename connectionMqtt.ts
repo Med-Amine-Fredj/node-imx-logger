@@ -319,9 +319,9 @@ const LOGGER = (function () {
                 )
               );
             } catch (error) {
-              logsChannel
-                ? logsChannel?.emit("error", error)
-                : conn && conn?.emit("error", error);
+              // logsChannel
+              //   ? logsChannel?.emit("error", error)
+              //   : conn && conn?.emit("error", error);
               console.error("Error sending debug logs : ", error);
             }
           },
@@ -347,9 +347,9 @@ const LOGGER = (function () {
                 )
               );
             } catch (error) {
-              logsChannel
-                ? logsChannel?.emit("error", error)
-                : conn && conn?.emit("error", error);
+              // logsChannel
+              //   ? logsChannel?.emit("error", error)
+              //   : conn && conn?.emit("error", error);
               console.error("Error sending debug logs : ", error);
             }
           },

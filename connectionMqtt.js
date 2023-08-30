@@ -284,9 +284,9 @@ var LOGGER = (function () {
                                         })));
                                     }
                                     catch (error) {
-                                        logsChannel_1
-                                            ? logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.emit("error", error)
-                                            : conn_1 && (conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.emit("error", error));
+                                        // logsChannel
+                                        //   ? logsChannel?.emit("error", error)
+                                        //   : conn && conn?.emit("error", error);
                                         console.error("Error sending debug logs : ", error);
                                     }
                                 },
@@ -303,9 +303,9 @@ var LOGGER = (function () {
                                         })));
                                     }
                                     catch (error) {
-                                        logsChannel_1
-                                            ? logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.emit("error", error)
-                                            : conn_1 && (conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.emit("error", error));
+                                        // logsChannel
+                                        //   ? logsChannel?.emit("error", error)
+                                        //   : conn && conn?.emit("error", error);
                                         console.error("Error sending debug logs : ", error);
                                     }
                                 },
