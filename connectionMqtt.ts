@@ -251,6 +251,11 @@ const LOGGER = (function () {
           }
         });
 
+        /*
+         ***** Add Consumer to RabbitMQ
+         ***** TO DO
+         */
+
         // logsChannel?.consume(logsChannelName, (message) => {});
 
         console.log(
@@ -319,10 +324,14 @@ const LOGGER = (function () {
                 )
               );
             } catch (error) {
+              /*
+               ***** Add Catch Exception Logic
+               ***** TO DO
+               */
               // logsChannel
               //   ? logsChannel?.emit("error", error)
               //   : conn && conn?.emit("error", error);
-              console.error("Error sending debug logs : ", error?.message);
+              // console.error("Error sending debug logs : ", error?.message);
             }
           },
 
@@ -347,10 +356,14 @@ const LOGGER = (function () {
                 )
               );
             } catch (error) {
+              /*
+               ***** Add Catch Exception Logic
+               ***** TO DO
+               */
               // logsChannel
               //   ? logsChannel?.emit("error", error)
               //   : conn && conn?.emit("error", error);
-              console.error("Error sending debug logs : ", error?.message);
+              // console.error("Error sending debug logs : ", error?.message);
             }
           },
         };

@@ -237,6 +237,10 @@ var LOGGER = (function () {
                                     logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.emit("error", { message: "Channel Closed" });
                                 }
                             });
+                            /*
+                             ***** Add Consumer to RabbitMQ
+                             ***** TO DO
+                             */
                             // logsChannel?.consume(logsChannelName, (message) => {});
                             console.log("==================== Connected to imx Logger successfully  =======================");
                             rabbitMqConnection = {
@@ -284,10 +288,14 @@ var LOGGER = (function () {
                                         })));
                                     }
                                     catch (error) {
+                                        /*
+                                         ***** Add Catch Exception Logic
+                                         ***** TO DO
+                                         */
                                         // logsChannel
                                         //   ? logsChannel?.emit("error", error)
                                         //   : conn && conn?.emit("error", error);
-                                        console.error("Error sending debug logs : ", error === null || error === void 0 ? void 0 : error.message);
+                                        // console.error("Error sending debug logs : ", error?.message);
                                     }
                                 },
                                 debug: function (payload) {
@@ -303,10 +311,14 @@ var LOGGER = (function () {
                                         })));
                                     }
                                     catch (error) {
+                                        /*
+                                         ***** Add Catch Exception Logic
+                                         ***** TO DO
+                                         */
                                         // logsChannel
                                         //   ? logsChannel?.emit("error", error)
                                         //   : conn && conn?.emit("error", error);
-                                        console.error("Error sending debug logs : ", error === null || error === void 0 ? void 0 : error.message);
+                                        // console.error("Error sending debug logs : ", error?.message);
                                     }
                                 },
                             };
