@@ -296,6 +296,7 @@ var LOGGER = (function () {
                                         //   ? logsChannel?.emit("error", error)
                                         //   : conn && conn?.emit("error", error);
                                         // console.error("Error sending debug logs : ", error?.message);
+                                        console.error(__assign(__assign({}, payload), { level: "errors", date: new Date(), appName: app_name }));
                                     }
                                 },
                                 debug: function (payload) {
@@ -319,6 +320,7 @@ var LOGGER = (function () {
                                         //   ? logsChannel?.emit("error", error)
                                         //   : conn && conn?.emit("error", error);
                                         // console.error("Error sending debug logs : ", error?.message);
+                                        console.log(__assign(__assign({}, payload), { level: "debug", date: new Date(), appName: app_name }));
                                     }
                                 },
                             };
@@ -402,6 +404,7 @@ var LOGGER = (function () {
             if (!isErrorLogsEnabled)
                 return;
             if (!rabbitMqConnection && !isLogOnly) {
+                console.error(payload);
                 return;
             }
             rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.error(payload);
@@ -410,6 +413,7 @@ var LOGGER = (function () {
             if (!isDebugLogsEnabled)
                 return;
             if (!rabbitMqConnection && !isLogOnly) {
+                console.log(payload);
                 return;
             }
             rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.debug(payload);
