@@ -241,16 +241,6 @@ const LOGGER = (function () {
           }
         });
 
-        logsChannel.on("drain", (reason) => {
-          console.error(
-            "Erreur in createConnectionToRabbitMQ : Channel drain ",
-            reason
-          );
-          if (enableReconnect) {
-            logsChannel?.emit("error", { message: "Channel Closed" });
-          }
-        });
-
         /*
          ***** Add Consumer to RabbitMQ
          ***** TO DO

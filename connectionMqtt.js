@@ -231,12 +231,6 @@ var LOGGER = (function () {
                                     }); }, reconnectTimeout);
                                 }
                             });
-                            logsChannel_1.on("drain", function (reason) {
-                                console.error("Erreur in createConnectionToRabbitMQ : Channel drain ", reason);
-                                if (enableReconnect) {
-                                    logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.emit("error", { message: "Channel Closed" });
-                                }
-                            });
                             /*
                              ***** Add Consumer to RabbitMQ
                              ***** TO DO
