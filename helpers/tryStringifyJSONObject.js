@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 function tryStringifyJSONObject(object) {
     try {
         if (object && typeof object !== "object") {
-            console.error("Erreur in payload message while sending logs : input ====>  ", object);
             var payload = {
                 payload: {
                     appName: "IMXLOGGER_NODE",
@@ -21,7 +20,6 @@ function tryStringifyJSONObject(object) {
         return stringedValue;
     }
     catch (e) {
-        console.error("Erreur in payload message while sending logs : input ====>  ", object);
         var payload = {
             payload: {
                 appName: "IMXLOGGER_NODE",

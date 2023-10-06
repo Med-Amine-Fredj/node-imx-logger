@@ -3,10 +3,6 @@ import { messagePayloadType } from "../Types/messagePayloadType";
 function tryStringifyJSONObject(object: object) {
   try {
     if (object && typeof object !== "object") {
-      console.error(
-        "Erreur in payload message while sending logs : input ====>  ",
-        object
-      );
       const payload: messagePayloadType = {
         payload: {
           appName: "IMXLOGGER_NODE",
@@ -24,10 +20,6 @@ function tryStringifyJSONObject(object: object) {
     const stringedValue = JSON.stringify(object);
     return stringedValue;
   } catch (e) {
-    console.error(
-      "Erreur in payload message while sending logs : input ====>  ",
-      object
-    );
     const payload: messagePayloadType = {
       payload: {
         appName: "IMXLOGGER_NODE",
