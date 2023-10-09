@@ -20,174 +20,53 @@ npm i node-imx-logger
 
 To establish a connection with the imxLogger server, utilize the following method, ensuring the inclusion of specific options and parameters:
 
-```
-import { imxNodeLogger } from "node-imx-logger";
+- The code above establishes a connection to the IMX Logger using the `LOGGER.createConnectionToRabbitMQ()` function.
 
-const option = {
-      hostname: "localhost",
-      port: 5672,
-      username: "user_name",
-      password: "password",
-    }
+  - The `options` object contains the RabbitMQ server connection details.
+  - The `extraOptions` object is optional and can contain properties to enable/disable logging features and specify reconnect behavior.
+  - The `connectToImxLogger()` function attempts to create a connection to the RabbitMQ server using the provided options and extra options. If an error occurs during the connection process, the error will be logged to the console.
 
-const extraOption={
-      enableDebug: true,
-      enableError: true,
-      enableReconnect: true,
-      reconnectTimeout: 30000 // 30 sec
-      logOnly: true/false // if you want to disable the send to queue 
-                           // and do only console.log without event connecting to queue 
-}
+  Please ensure to replace the placeholder values (`localhost`, `5672`, `user_name`, `password`, `queueName`) with your actual server details.
 
-const app_name = "app_name_example"
+  ### Additional Functions
 
-const callBacks ={
-        onErrorCallback: (error) => console.error(error),
-        onDisconnectCallback: () => console.log("Disconnected"),
-        onConnectCallback: () => console.log("Connected")
-}
+  The `LOGGER` module provides several functions for logging and managing logging settings:
 
-async function connectToImxLogger() {
-  try {
-    await imxNodeLogger.createConnectionToRabbitMQ(options, queueName,extraOption,app_name,callBack);
-  } catch (error) {
-    console.error("Error",error);
-  }
-}
-```
+  #### Logging Functions:
 
-- The code above establishes a connection to the IMX Logger using the `imxNodeLogger.createConnectionToRabbitMQ()` function.
-  
-  - The `options` object contains the following properties:
-    
-    - `hostname` (string): The hostname of the RabbitMQ server.
-    - `port` (number): The port number of the RabbitMQ server.
-    - `username` (string): The username for authenticating with the RabbitMQ server.
-    - `password` (string): The password for authenticating with the RabbitMQ server.
-  
-  - The `extraOptions` object is optional and can contain the following properties:
-    
-    - `enableDebug` (boolean): Set to `true` if you want to enable debug logs. Set to `false` if you want to disable debug logs.
-    - `enableError` (boolean): Set to `true` if you want to enable error logs. Set to `false` if you want to disable error logs.
-    - `enableReconnect` (boolean): Set to `true` if you want the logger to automatically reconnect in case of errors. Set to `false` if you don't want automatic reconnection.
-    - `reconnectTimeout` (number): The delay (in milliseconds) between reconnection attempts. This property is only applicable if `enableReconnect` is set to `true`.
-  
-  The `connectToImxLogger()` function attempts to create a connection to the RabbitMQ server using the provided options and extra options. If an error occurs during the connection process, the error will be logged to the console.
-  
-  Please note that you need to replace the placeholder values (`localhost`, `5672`, `user_name`, `password`, `queueName`) with the actual values specific to your environment.
-  
-  That's it! You can now use this code to connect to the IMX Logger and start logging your application's debug and error messages.
+  - `LOGGER.error(payload: messagePayloadASArg): void`: Log an error message.
+  - `LOGGER.debug(payload: messagePayloadASArg): void`: Log a debug message.
 
-Now you can use or import the imxNodeLogger everywhere in the app with default existing methods byo leverage the imxNodeLogger in your application and access its default existing methods, you can either use or import it. The imxNodeLogger is built on the `amqplib` library, which provides the underlying functionality. You can find the `amqplib` package on npm [here](https://www.npmjs.com/package/amqplib).
+  #### Logging Configuration Functions:
 
-Here are the additional functions provided by the `connectToImxLogger` returned by the `imxNodeLogger.createMqttConnection()` method, along with their descriptions:
+  - `LOGGER.enableErrorLogging(): void`: Enable error logging.
+  - `LOGGER.disableErrorLogging(): void`: Disable error logging.
+  - `LOGGER.enableDebugLogging(): void`: Enable debug logging.
+  - `LOGGER.disableDebugLogging(): void`: Disable debug logging.
+  - `LOGGER.checkLoggingStatus(): { errorLoggingStatus: boolean; debugLoggingStatus: boolean; }`: Check the current logging status.
+  - `LOGGER.checkErrorLoggingStatus(): boolean`: Check if error logging is enabled.
+  - `LOGGER.checkDebugLoggingStatus(): boolean`: Check if debug logging is enabled.
+  - `LOGGER.setAppName(appName: string): void`: Set the application name used in log messages.
+  - `LOGGER.enableDisableAllLogging(): void`: Disable all logging.
+  - `LOGGER.disableDisableAllLogging(): void`: Enable all logging.
+  - `LOGGER.checkDisableAllLoggingStatus(): boolean`: Check if all logging is disabled.
+  - `LOGGER.enableLogOnly(): void`: Enable log-only mode (logs to console, not to the queue).
+  - `LOGGER.disableLogOnly(): void`: Disable log-only mode.
+  - `LOGGER.checkLogOnlyStatus(): boolean`: Check if log-only mode is enabled.
 
-- `error(payload): void`: This function is used to log an error message to the connected RabbitMQ server. It accepts an object as the payload, containing the necessary information for the error log . `appName, message, context AS string` as required and `extra as any, user as string`
+  #### Other Functions:
 
-- `debug(payload): void`: Use this function to log a debug message to the connected RabbitMQ server. It takes an object as the payload, containing the relevant details for the debug log.
+  - `LOGGER.getConnectionObject(): rabbitMqConnectionType`: Get the current RabbitMQ connection object.
+  - `LOGGER.getAllExtraOptions(): ExtraOptions`: Get all extra logging options.=
+  - `LOGGER.disconnectFromLogger(): void`: Disconnect from the IMX Logger.
 
-- `enableErrorLogging(): void`: Call this function to enable logging the errors if it was previously disabled. It allows logs to be sent to the RabbitMQ server.
+  #### Message payload
 
-- `disableErrorLogging(): void`: This function disables logging, preventing any error logs from being sent to the RabbitMQ server. Use it when you want to temporarily halt logging.
+  The `messagePayloadASArg` type represents the payload when logging error and debug messages. It includes the following properties:
 
-- `enableDebugLogging(): void`: Call this function to enable debug the errors if it was previously disabled. It allows logs to be sent to the RabbitMQ server.
+  - `message` (required): A string representing the main message content of the log.
+  - `context` (required): A string specifying the context or category of the log, providing additional information about where the log is originating from.
+  - `user` (optional): An optional string representing the user associated with the log. This property can be omitted if the log is not specific to a user.
+  - `extra` (optional): An optional property that allows additional data or context to be included in the log. This can be of any type (`any`), accommodating various custom data structures or objects.
 
-- `disableDebugLogging(): void`: This function disables logging, preventing any debug logs from being sent to the RabbitMQ server. Use it when you want to temporarily halt logging.
-
-- `checkLoggingStatus(): { errorLoggingStatus: boolean; debugLoggingStatus: boolean;}`: Invoke this function to check whether logging is currently enabled or disabled.
-
-- `checkErrorLoggingStatus():boolean `: Invoke this function to check whether the error logging is currently enabled or disabled.
-
-- `checkDebugLoggingStatus():boolean` : Invoke this function to check whether the debug logging is currently enabled or disabled.
-
-- `setAppName(app_name: string):void` : Invoke this function to set the app name passed in logs sending.
-
-This type is used as the payload when logging error and debug messages to the connected RabbitMQ server. It consists of the following properties:
-
-- `message` (required): A string representing the main message content of the log.
-
-- `context` (required): A string specifying the context or category of the log, providing additional information about where the log is originating from.
-
-- `user` (optional): An optional string representing the user associated with the log. This property can be omitted if the log is not specific to a user.
-
-- `extra` (optional): An optional property that allows for additional data or context to be included in the log. This can be of any type (`any`), accommodating various custom data structures or objects.
-
-Please note that the `rabbitMqConnectionType` can also be `null` if the connection to the RabbitMQ server was unsuccessful.
-
-### Examples
-
-##### To set the app name  :
-
-```
- imxNodeLogger.setAppName("app_name_example");
-```
-
-##### To send debug logs use :
-
-```
- imxNodeLogger.debug({
-        context: "context_example",
-        message: `message_example`,
-        user?: "user_example",
-      });
-```
-
-##### To send errors logs use :
-
-```
- imxNodeLogger.error({
-        context: "context_example",
-        message: `message_example`,
-        user?: "user_example",
-      });
-```
-
-##### To enable ERROR logging:
-
-```
-imxNodeLogger.enableErrorLogging()
-```
-
-##### To disable ERROR logging:
-
-```
-imxNodeLogger.disableErrorLogging()
-```
-
-##### To enable DEBUG logging:
-
-```
-imxNodeLogger.enableDebugLogging()
-```
-
-##### To disable DEBUG logging:
-
-```
-imxNodeLogger.disableDebugLogging()
-```
-
-##### To check the logging status :
-
-```
-imxNodeLogger.checkIsEnaled() //return { errorLoggingStatus: boolean;
-  debugLoggingStatus: boolean;
-}
-```
-
-##### To get the connection result :
-
-```
-imxNodeLogger.getConnectionObject()
-```
-
-##### To check debug logging status  :
-
-```
-imxNodeLogger.checkErrorLoggingStatus() //return bool
-```
-
-##### To check eror logging status :
-
-```
-imxNodeLogger.checkDebugLoggingStatus() //return bool
-```
+  Please note that the `rabbitMqConnectionType` can be `null` if the connection to the RabbitMQ server was unsuccessful.
