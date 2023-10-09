@@ -3,18 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 function tryStringifyJSONObject(object) {
     try {
         if (object && typeof object !== "object") {
-            var payload = {
-                payload: {
-                    appName: "IMXLOGGER_NODE",
-                    context: "ERROR_STRINGIFY",
-                    message: "Erreur in IMX LOGGER FOR NODE,  payload message while sending logs : input ====>  ",
-                    extra: object,
-                    level: "debug",
-                    date: new Date(),
-                },
-            };
-            var stringedValue_1 = JSON.stringify(payload);
-            return stringedValue_1;
+            throw new Error("Arg must be a string");
         }
         var stringedValue = JSON.stringify(object);
         return stringedValue;
@@ -22,7 +11,7 @@ function tryStringifyJSONObject(object) {
     catch (e) {
         var payload = {
             payload: {
-                appName: "IMXLOGGER_NODE",
+                appName: "imx-node-logger",
                 context: "ERROR_STRINGIFY",
                 message: "Erreur in IMX LOGGER FOR NODE,  payload message while sending logs : input ====>  ",
                 extra: object,
@@ -30,8 +19,20 @@ function tryStringifyJSONObject(object) {
                 date: new Date(),
             },
         };
-        var stringedValue = JSON.stringify(payload);
-        return stringedValue;
+        var cache_1 = [];
+        var str = JSON.stringify(payload, function (key, value) {
+            if (typeof value === "object" && value !== null) {
+                if (cache_1.indexOf(value) !== -1) {
+                    // Circular reference found, discard key
+                    return;
+                }
+                // Store value in our collection
+                cache_1.push(value);
+            }
+            return value;
+        });
+        cache_1 = null;
+        return str;
     }
 }
 exports.default = tryStringifyJSONObject;

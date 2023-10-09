@@ -3,26 +3,15 @@ import { messagePayloadType } from "../Types/messagePayloadType";
 function tryStringifyJSONObject(object: object) {
   try {
     if (object && typeof object !== "object") {
-      const payload: messagePayloadType = {
-        payload: {
-          appName: "IMXLOGGER_NODE",
-          context: "ERROR_STRINGIFY",
-          message:
-            "Erreur in IMX LOGGER FOR NODE,  payload message while sending logs : input ====>  ",
-          extra: object,
-          level: "debug",
-          date: new Date(),
-        },
-      };
-      const stringedValue = JSON.stringify(payload);
-      return stringedValue;
+      throw new Error("Arg must be a string");
     }
+
     const stringedValue = JSON.stringify(object);
     return stringedValue;
   } catch (e) {
     const payload: messagePayloadType = {
       payload: {
-        appName: "IMXLOGGER_NODE",
+        appName: "imx-node-logger",
         context: "ERROR_STRINGIFY",
         message:
           "Erreur in IMX LOGGER FOR NODE,  payload message while sending logs : input ====>  ",
@@ -31,8 +20,24 @@ function tryStringifyJSONObject(object: object) {
         date: new Date(),
       },
     };
-    const stringedValue = JSON.stringify(payload);
-    return stringedValue;
+
+    let cache = [];
+
+    let str = JSON.stringify(payload, function (key, value) {
+      if (typeof value === "object" && value !== null) {
+        if (cache.indexOf(value) !== -1) {
+          // Circular reference found, discard key
+
+          return;
+        }
+        // Store value in our collection
+        cache.push(value);
+      }
+      return value;
+    });
+    cache = null;
+
+    return str;
   }
 }
 

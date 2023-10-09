@@ -1,10 +1,10 @@
 {
   "name": "node-imx-logger",
-  "version": "1.1.6",
+  "version": "1.2.0",
   "description": "Imaxeam logger for node",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --silent"
   },
   "repository": {
     "type": "git",
@@ -27,7 +27,9 @@
     "@types/amqplib": "^0.10.1",
     "@types/jest": "^29.5.5",
     "@types/node": "^20.2.3",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
   },
   "jest": {
     "testEnvironment": "node",
@@ -40,6 +42,9 @@
       "js",
       "json",
       "node"
-    ]
+    ],
+    "moduleNameMapper": {
+      "^buffer$": "<rootDir>/helpers/__mocks__/buffer.ts"
+    }
   }
 }

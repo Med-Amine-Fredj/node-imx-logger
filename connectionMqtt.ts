@@ -8,23 +8,17 @@ import { rabbitMqConnectionType } from "./Types/rabbitMqConnectionType";
 
 import tryStringifyJSONObject from "./helpers/tryStringifyJSONObject";
 
+import createBuffer from "./helpers/createBuffer";
+
 const LOGGER = (function () {
   let rabbitMqConnection: rabbitMqConnectionType = null;
-
-  let logsQueueName: string = "";
-
+  let logsQueueName: string = "logs";
   let isLogOnly: boolean = false;
-
   let disableAll: boolean = false;
-
   let isDebugLogsEnabled: boolean = true;
-
   let isErrorLogsEnabled: boolean = true;
-
   let enableReconnect: boolean = true;
-
   let reconnectTimeout: number = 30000;
-
   let app_name: string = "N/A";
 
   return {
@@ -39,30 +33,22 @@ const LOGGER = (function () {
         logOnly?: boolean;
         disableAll?: boolean;
       },
-      appName?: string,
+      appName = "N/A",
       callBacks?: {
         onErrorCallback?: (error: Error) => any;
         onDisconnectCallback?: Function;
         onConnectCallback?: Function;
       }
     ): Promise<rabbitMqConnectionType | undefined> {
+      disableAll = extraOptions?.disableAll ?? false;
+      isDebugLogsEnabled = extraOptions?.enableDebug ?? true;
+      isErrorLogsEnabled = extraOptions?.enableError ?? true;
+      enableReconnect = extraOptions?.enableReconnect ?? true;
+      reconnectTimeout = extraOptions?.reconnectTimeout || 30000;
+      isLogOnly = extraOptions?.logOnly ?? false;
+      app_name = appName;
+      logsQueueName = queueName;
       try {
-        disableAll = extraOptions?.disableAll ?? false;
-
-        isDebugLogsEnabled = extraOptions?.enableDebug ?? true;
-
-        isErrorLogsEnabled = extraOptions?.enableError ?? true;
-
-        enableReconnect = extraOptions?.enableReconnect ?? true;
-
-        reconnectTimeout = extraOptions?.reconnectTimeout || 30000;
-
-        isLogOnly = extraOptions?.logOnly ?? false;
-
-        app_name = appName || "N/A";
-
-        logsQueueName = queueName || "logs";
-
         if (disableAll || isLogOnly) {
           return (rabbitMqConnection = null);
         }
@@ -70,6 +56,7 @@ const LOGGER = (function () {
         const conn = await amqp.connect(option);
 
         conn?.once("error", (error) => {
+          disableAll = true;
           callBacks?.onErrorCallback && callBacks?.onErrorCallback(error);
           console.error(
             "Erreur in createConnectionToRabbitMQ  from imxNodeLogger: ",
@@ -90,11 +77,7 @@ const LOGGER = (function () {
                   option,
                   queueName,
                   {
-                    enableDebug: extraOptions?.enableDebug,
-                    enableError: extraOptions?.enableError,
-                    enableReconnect: extraOptions?.enableReconnect,
-                    reconnectTimeout: extraOptions?.reconnectTimeout,
-                    logOnly: extraOptions?.logOnly,
+                    ...extraOptions,
                   },
                   app_name,
                   {
@@ -104,7 +87,10 @@ const LOGGER = (function () {
                   }
                 );
               } catch (error) {
-                console.error("Error createConnectionToRabbitMQ", error);
+                throw new Error(
+                  "Error in reconnect from connection error event : " +
+                    error?.message
+                );
               }
             }, reconnectTimeout);
           }
@@ -113,10 +99,12 @@ const LOGGER = (function () {
         conn?.on("close", () => {
           try {
             if (enableReconnect) {
-              conn?.emit("error", "Logger connection closed ");
+              conn?.emit("error", "Logger rabbit mq connection closed ");
             }
           } catch (error) {
-            throw new Error(error?.message);
+            throw new Error(
+              "Error from close event in connection rabbitMQ :" + error?.message
+            );
           }
         });
 
@@ -134,10 +122,16 @@ const LOGGER = (function () {
         });
 
         conn?.on("disconnected", () => {
-          console.log(
-            "=============== imxNodeLogger disconnected =============== "
-          );
-          callBacks?.onDisconnectCallback && callBacks?.onDisconnectCallback();
+          try {
+            conn?.close();
+            callBacks?.onDisconnectCallback &&
+              callBacks?.onDisconnectCallback();
+            console.log(
+              "=============== imxNodeLogger disconnected =============== "
+            );
+          } catch (error) {
+            throw new Error("Error in disconnect event : " + error?.message);
+          }
         });
 
         conn?.on("connected", () => {
@@ -153,10 +147,19 @@ const LOGGER = (function () {
         await logsChannel?.checkQueue(logsQueueName);
 
         logsChannel.once("error", (error) => {
+          disableAll = true;
+
+          if (conn) {
+            logsChannel?.close();
+            conn?.emit("error", error);
+            return;
+          }
+
           console.error(
             "Erreur in createConnectionToRabbitMQ : Channel Error ",
             error?.message
           );
+
           if (enableReconnect) {
             console.log(
               "=============== Retrying to reconnect to imxLogger in " +
@@ -172,11 +175,7 @@ const LOGGER = (function () {
                   option,
                   queueName,
                   {
-                    enableDebug: extraOptions?.enableDebug,
-                    enableError: extraOptions?.enableError,
-                    enableReconnect: extraOptions?.enableReconnect,
-                    reconnectTimeout: extraOptions?.reconnectTimeout,
-                    logOnly: extraOptions?.logOnly,
+                    ...extraOptions,
                   },
                   app_name,
                   {
@@ -186,26 +185,31 @@ const LOGGER = (function () {
                   }
                 );
               } catch (error) {
-                console.error("Error createConnectionToRabbitMQ", error);
+                throw new Error(
+                  "Error createConnectionToRabbitMQ reconnect in logChannel error event : " +
+                    error?.message
+                );
               }
             }, reconnectTimeout);
           }
         });
 
         logsChannel.on("close", () => {
-          console.error(
-            "Erreur in createConnectionToRabbitMQ : Channel Closed "
-          );
+          console.error("Error in logChannel event (close)  : Channel Closed ");
           if (enableReconnect) {
             logsChannel
-              ? logsChannel?.emit("error", { message: "Channel Closed" })
-              : conn && conn?.emit("error", { message: "Channel Closed" });
+              ? logsChannel?.emit("error", "Channel Closed :")
+              : conn && conn?.emit("error", "Channel Closed");
           }
         });
 
-        logsChannel.on("return", function (msg) {});
+        logsChannel.on("return", function (msg) {
+          return;
+        });
 
-        logsChannel.on("drain", function () {});
+        logsChannel.on("drain", function () {
+          return;
+        });
 
         rabbitMqConnection = {
           amqpConnection: conn,
@@ -213,15 +217,16 @@ const LOGGER = (function () {
           channelConnection: logsChannel,
 
           error(payload: messagePayloadASArg) {
-            if (!isErrorLogsEnabled) return;
             if (!logsChannel) {
-              console.error("Channel is not available. Cannot send error log.");
+              console.error(
+                "Channel is not available => Cannot send error log."
+              );
               return;
             }
             try {
               logsChannel?.sendToQueue(
                 logsQueueName,
-                Buffer.from(
+                createBuffer(
                   tryStringifyJSONObject({
                     payload: {
                       ...payload,
@@ -233,14 +238,7 @@ const LOGGER = (function () {
                 )
               );
             } catch (error) {
-              /*
-               ***** Add Catch Exception Logic
-               ***** TO DO
-               */
-              // logsChannel
-              //   ? logsChannel?.emit("error", error)
-              //   : conn && conn?.emit("error", error);
-              // console.error("Error sending debug logs : ", error?.message);
+              if (disableAll || !isErrorLogsEnabled) return;
               console.error({
                 ...payload,
                 level: "errors",
@@ -251,15 +249,15 @@ const LOGGER = (function () {
           },
 
           debug(payload: messagePayloadASArg) {
-            if (!isDebugLogsEnabled) return;
             if (!logsChannel) {
               console.error("Channel is not available. Cannot send error log.");
               return;
             }
+
             try {
               logsChannel?.sendToQueue(
                 logsQueueName,
-                Buffer.from(
+                createBuffer(
                   tryStringifyJSONObject({
                     payload: {
                       ...payload,
@@ -271,14 +269,8 @@ const LOGGER = (function () {
                 )
               );
             } catch (error) {
-              /*
-               ***** Add Catch Exception Logic
-               ***** TO DO
-               */
-              // logsChannel
-              //   ? logsChannel?.emit("error", error)
-              //   : conn && conn?.emit("error", error);
-              // console.error("Error sending debug logs : ", error?.message);
+              if (disableAll || !isDebugLogsEnabled) return;
+
               console.log({
                 ...payload,
                 level: "debug",
@@ -293,7 +285,11 @@ const LOGGER = (function () {
 
         return rabbitMqConnection;
       } catch (error) {
-        console.error("Erreur in createConnectionToRabbitMQ : ", error);
+        disableAll = true;
+        console.error(
+          "Erreur in createConnectionToRabbitMQ : " + error?.message,
+          error
+        );
         if (enableReconnect) {
           console.log(
             "=============== Retrying to reconnect to imxLogger in " +
@@ -309,21 +305,17 @@ const LOGGER = (function () {
                 option,
                 queueName,
                 {
-                  enableDebug: extraOptions?.enableDebug,
-                  enableError: extraOptions?.enableError,
-                  enableReconnect: extraOptions?.enableReconnect,
-                  reconnectTimeout: extraOptions?.reconnectTimeout,
-                  logOnly: extraOptions?.logOnly,
+                  ...extraOptions,
                 },
                 app_name,
                 {
-                  onConnectCallback: callBacks?.onConnectCallback,
-                  onDisconnectCallback: callBacks?.onDisconnectCallback,
-                  onErrorCallback: callBacks?.onErrorCallback,
+                  ...callBacks,
                 }
               );
             } catch (error) {
-              console.error("Error createConnectionToRabbitMQ", error);
+              console.error(
+                "Error in reconnect from connection catch : " + error?.message
+              );
             }
           }, reconnectTimeout);
         }
@@ -332,6 +324,41 @@ const LOGGER = (function () {
 
     getConnectionObject() {
       return rabbitMqConnection;
+    },
+
+    getAllExtraOptions() {
+      return {
+        enableDebug: isDebugLogsEnabled,
+        enableError: isErrorLogsEnabled,
+        enableReconnect: enableReconnect,
+        reconnectTimeout: reconnectTimeout,
+        logOnly: isLogOnly,
+        disableAll: disableAll,
+      };
+    },
+
+    enableDisableAllLogging() {
+      disableAll = true;
+    },
+
+    disbaleDisableAllLogging() {
+      disableAll = false;
+    },
+
+    checkDisableAllLoggingStatus() {
+      return disableAll;
+    },
+
+    enableLogOngly() {
+      isLogOnly = true;
+    },
+
+    disableLogOngly() {
+      isLogOnly = false;
+    },
+
+    checkLogOnglyStatus() {
+      return isLogOnly;
     },
 
     enableErrorLogging() {
@@ -371,20 +398,32 @@ const LOGGER = (function () {
 
     error(payload: messagePayloadASArg) {
       if (disableAll || !isErrorLogsEnabled) return;
-      if (!rabbitMqConnection && !isLogOnly) {
+      if (isLogOnly) {
         console.error(payload);
-        return;
       }
       rabbitMqConnection?.error(payload);
     },
 
     debug(payload: messagePayloadASArg) {
       if (disableAll || !isDebugLogsEnabled) return;
-      if (!rabbitMqConnection && !isLogOnly) {
+      if (isLogOnly) {
         console.log(payload);
-        return;
       }
       rabbitMqConnection?.debug(payload);
+    },
+
+    disconnectFromLogger() {
+      if (!rabbitMqConnection) {
+        return;
+      }
+      try {
+        rabbitMqConnection?.amqpConnection?.emit("disconnected");
+      } catch (error) {
+        console.warn(
+          "Error with disconnect function : " + error?.message,
+          error
+        );
+      }
     },
   };
 })();
