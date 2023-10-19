@@ -11,6 +11,7 @@ import tryStringifyJSONObject from "./helpers/tryStringifyJSONObject";
 import createBuffer from "./helpers/createBuffer";
 
 const LOGGER = (function () {
+  let timeOutId = null;
   let rabbitMqConnection: rabbitMqConnectionType = null;
   let logsQueueName: string = "logs";
   let isLogOnly: boolean = false;
@@ -49,6 +50,10 @@ const LOGGER = (function () {
       app_name = appName;
       logsQueueName = queueName;
       try {
+        if (timeOutId) {
+          clearTimeout(timeOutId);
+        }
+
         if (disableAll || isLogOnly) {
           return (rabbitMqConnection = null);
         }
@@ -58,6 +63,13 @@ const LOGGER = (function () {
         conn?.once("error", (error) => {
           disableAll = true;
           callBacks?.onErrorCallback && callBacks?.onErrorCallback(error);
+          logsChannel?.close();
+
+          rabbitMqConnection = {
+            ...rabbitMqConnection,
+            amqpConnection: null,
+            channelConnection: null,
+          };
           console.error(
             "Erreur in createConnectionToRabbitMQ  from imxNodeLogger: ",
             error?.message
@@ -68,7 +80,10 @@ const LOGGER = (function () {
                 reconnectTimeout +
                 "MS ...... ==============="
             );
-            setTimeout(async () => {
+            if (timeOutId) {
+              clearTimeout(timeOutId);
+            }
+            timeOutId = setTimeout(async () => {
               console.log(
                 "=============== Trying to reconnect to imxLogger.... ==============="
               );
@@ -97,15 +112,7 @@ const LOGGER = (function () {
         });
 
         conn?.on("close", () => {
-          try {
-            if (enableReconnect) {
-              conn?.emit("error", "Logger rabbit mq connection closed ");
-            }
-          } catch (error) {
-            throw new Error(
-              "Error from close event in connection rabbitMQ :" + error?.message
-            );
-          }
+          return;
         });
 
         conn?.on("blocked", (reason) => {
@@ -122,8 +129,18 @@ const LOGGER = (function () {
         });
 
         conn?.on("disconnected", () => {
+          if (timeOutId) {
+            clearTimeout(timeOutId);
+          }
+          disableAll = true;
           try {
-            conn?.close();
+            logsChannel && logsChannel?.close();
+            conn && conn?.close();
+            rabbitMqConnection = {
+              ...rabbitMqConnection,
+              amqpConnection: null,
+              channelConnection: null,
+            };
             callBacks?.onDisconnectCallback &&
               callBacks?.onDisconnectCallback();
             console.log(
@@ -166,7 +183,11 @@ const LOGGER = (function () {
                 reconnectTimeout +
                 "MS ...... ==============="
             );
-            setTimeout(async () => {
+
+            if (timeOutId) {
+              clearTimeout(timeOutId);
+            }
+            timeOutId = setTimeout(async () => {
               console.log(
                 "=============== Trying to reconnect to imxLogger.... ==============="
               );
@@ -195,12 +216,8 @@ const LOGGER = (function () {
         });
 
         logsChannel.on("close", () => {
+          disableAll = true;
           console.error("Error in logChannel event (close)  : Channel Closed ");
-          if (enableReconnect) {
-            logsChannel
-              ? logsChannel?.emit("error", "Channel Closed :")
-              : conn && conn?.emit("error", "Channel Closed");
-          }
         });
 
         logsChannel.on("return", function (msg) {
@@ -296,7 +313,11 @@ const LOGGER = (function () {
               reconnectTimeout +
               "MS ...... ==============="
           );
-          setTimeout(async () => {
+
+          if (timeOutId) {
+            clearTimeout(timeOutId);
+          }
+          timeOutId = setTimeout(async () => {
             console.log(
               "=============== Trying to reconnect to imxLogger.... ==============="
             );
@@ -401,19 +422,41 @@ const LOGGER = (function () {
       if (isLogOnly) {
         console.error(payload);
       }
+
+      if (
+        !rabbitMqConnection?.amqpConnection ||
+        !rabbitMqConnection?.channelConnection ||
+        !rabbitMqConnection
+      ) {
+        return;
+      }
+
       rabbitMqConnection?.error(payload);
     },
 
     debug(payload: messagePayloadASArg) {
-      if (disableAll || !isDebugLogsEnabled) return;
+      if ((disableAll && !isLogOnly) || !isDebugLogsEnabled) return;
       if (isLogOnly) {
         console.log(payload);
       }
+
+      if (
+        !rabbitMqConnection?.amqpConnection ||
+        !rabbitMqConnection?.channelConnection ||
+        !rabbitMqConnection
+      ) {
+        return;
+      }
+
       rabbitMqConnection?.debug(payload);
     },
 
     disconnectFromLogger() {
-      if (!rabbitMqConnection) {
+      if (
+        !rabbitMqConnection?.amqpConnection ||
+        !rabbitMqConnection?.channelConnection ||
+        !rabbitMqConnection
+      ) {
         return;
       }
       try {

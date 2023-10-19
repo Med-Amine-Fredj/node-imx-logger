@@ -51,6 +51,7 @@ var amqp = require("amqplib");
 var tryStringifyJSONObject_1 = require("./helpers/tryStringifyJSONObject");
 var createBuffer_1 = require("./helpers/createBuffer");
 var LOGGER = (function () {
+    var timeOutId = null;
     var rabbitMqConnection = null;
     var logsQueueName = "logs";
     var isLogOnly = false;
@@ -81,6 +82,9 @@ var LOGGER = (function () {
                             _f.label = 1;
                         case 1:
                             _f.trys.push([1, 5, , 6]);
+                            if (timeOutId) {
+                                clearTimeout(timeOutId);
+                            }
                             if (disableAll || isLogOnly) {
                                 return [2 /*return*/, (rabbitMqConnection = null)];
                             }
@@ -90,12 +94,17 @@ var LOGGER = (function () {
                             conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.once("error", function (error) {
                                 disableAll = true;
                                 (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback) && (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback(error));
+                                logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.close();
+                                rabbitMqConnection = __assign(__assign({}, rabbitMqConnection), { amqpConnection: null, channelConnection: null });
                                 console.error("Erreur in createConnectionToRabbitMQ  from imxNodeLogger: ", error === null || error === void 0 ? void 0 : error.message);
                                 if (enableReconnect) {
                                     console.log("=============== Retrying to reconnect to imxLogger in " +
                                         reconnectTimeout +
                                         "MS ...... ===============");
-                                    setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                                    if (timeOutId) {
+                                        clearTimeout(timeOutId);
+                                    }
+                                    timeOutId = setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
                                         var error_2;
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
@@ -123,14 +132,7 @@ var LOGGER = (function () {
                                 }
                             });
                             conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.on("close", function () {
-                                try {
-                                    if (enableReconnect) {
-                                        conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.emit("error", "Logger rabbit mq connection closed ");
-                                    }
-                                }
-                                catch (error) {
-                                    throw new Error("Error from close event in connection rabbitMQ :" + (error === null || error === void 0 ? void 0 : error.message));
-                                }
+                                return;
                             });
                             conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.on("blocked", function (reason) {
                                 console.error("Connection to RabbitMQ is blocked for  (will disable logs until connection will be unblocked): " +
@@ -142,8 +144,14 @@ var LOGGER = (function () {
                                 disableAll = false;
                             });
                             conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.on("disconnected", function () {
+                                if (timeOutId) {
+                                    clearTimeout(timeOutId);
+                                }
+                                disableAll = true;
                                 try {
-                                    conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.close();
+                                    logsChannel_1 && (logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.close());
+                                    conn_1 && (conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.close());
+                                    rabbitMqConnection = __assign(__assign({}, rabbitMqConnection), { amqpConnection: null, channelConnection: null });
                                     (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onDisconnectCallback) &&
                                         (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onDisconnectCallback());
                                     console.log("=============== imxNodeLogger disconnected =============== ");
@@ -174,7 +182,10 @@ var LOGGER = (function () {
                                     console.log("=============== Retrying to reconnect to imxLogger in " +
                                         reconnectTimeout +
                                         "MS ...... ===============");
-                                    setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                                    if (timeOutId) {
+                                        clearTimeout(timeOutId);
+                                    }
+                                    timeOutId = setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
                                         var error_3;
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
@@ -202,12 +213,8 @@ var LOGGER = (function () {
                                 }
                             });
                             logsChannel_1.on("close", function () {
+                                disableAll = true;
                                 console.error("Error in logChannel event (close)  : Channel Closed ");
-                                if (enableReconnect) {
-                                    logsChannel_1
-                                        ? logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.emit("error", "Channel Closed :")
-                                        : conn_1 && (conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.emit("error", "Channel Closed"));
-                                }
                             });
                             logsChannel_1.on("return", function (msg) {
                                 return;
@@ -261,7 +268,10 @@ var LOGGER = (function () {
                                 console.log("=============== Retrying to reconnect to imxLogger in " +
                                     reconnectTimeout +
                                     "MS ...... ===============");
-                                setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                                if (timeOutId) {
+                                    clearTimeout(timeOutId);
+                                }
+                                timeOutId = setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
                                     var error_4;
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
@@ -353,19 +363,31 @@ var LOGGER = (function () {
             if (isLogOnly) {
                 console.error(payload);
             }
+            if (!(rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.amqpConnection) ||
+                !(rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.channelConnection) ||
+                !rabbitMqConnection) {
+                return;
+            }
             rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.error(payload);
         },
         debug: function (payload) {
-            if (disableAll || !isDebugLogsEnabled)
+            if ((disableAll && !isLogOnly) || !isDebugLogsEnabled)
                 return;
             if (isLogOnly) {
                 console.log(payload);
+            }
+            if (!(rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.amqpConnection) ||
+                !(rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.channelConnection) ||
+                !rabbitMqConnection) {
+                return;
             }
             rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.debug(payload);
         },
         disconnectFromLogger: function () {
             var _a;
-            if (!rabbitMqConnection) {
+            if (!(rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.amqpConnection) ||
+                !(rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.channelConnection) ||
+                !rabbitMqConnection) {
                 return;
             }
             try {
