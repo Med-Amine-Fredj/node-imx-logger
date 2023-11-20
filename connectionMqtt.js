@@ -96,7 +96,6 @@ var LOGGER = (function () {
                                 (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback) && (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback(error));
                                 logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.close();
                                 rabbitMqConnection = __assign(__assign({}, rabbitMqConnection), { amqpConnection: null, channelConnection: null });
-                                console.error("Erreur in createConnectionToRabbitMQ  from imxNodeLogger: ", error === null || error === void 0 ? void 0 : error.message);
                                 if (enableReconnect) {
                                     console.log("=============== Retrying to reconnect to imxLogger in " +
                                         reconnectTimeout +
@@ -135,13 +134,12 @@ var LOGGER = (function () {
                                 return;
                             });
                             conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.on("blocked", function (reason) {
-                                console.error("Connection to RabbitMQ is blocked for  (will disable logs until connection will be unblocked): " +
-                                    reason);
                                 disableAll = true;
+                                return;
                             });
                             conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.on("unblocked", function () {
-                                console.log("Connection to RabbitMQ is unblocked ");
                                 disableAll = false;
+                                return;
                             });
                             conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.on("disconnected", function () {
                                 if (timeOutId) {
@@ -177,7 +175,6 @@ var LOGGER = (function () {
                                     conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.emit("error", error);
                                     return;
                                 }
-                                console.error("Erreur in createConnectionToRabbitMQ : Channel Error ", error === null || error === void 0 ? void 0 : error.message);
                                 if (enableReconnect) {
                                     console.log("=============== Retrying to reconnect to imxLogger in " +
                                         reconnectTimeout +
@@ -214,7 +211,7 @@ var LOGGER = (function () {
                             });
                             logsChannel_1.on("close", function () {
                                 disableAll = true;
-                                console.error("Error in logChannel event (close)  : Channel Closed ");
+                                return;
                             });
                             logsChannel_1.on("return", function (msg) {
                                 return;
@@ -227,7 +224,6 @@ var LOGGER = (function () {
                                 channelConnection: logsChannel_1,
                                 error: function (payload) {
                                     if (!logsChannel_1) {
-                                        console.error("Channel is not available => Cannot send error log.");
                                         return;
                                     }
                                     try {
@@ -243,7 +239,6 @@ var LOGGER = (function () {
                                 },
                                 debug: function (payload) {
                                     if (!logsChannel_1) {
-                                        console.error("Channel is not available. Cannot send error log.");
                                         return;
                                     }
                                     try {
@@ -263,7 +258,6 @@ var LOGGER = (function () {
                         case 5:
                             error_1 = _f.sent();
                             disableAll = true;
-                            console.error("Erreur in createConnectionToRabbitMQ : " + (error_1 === null || error_1 === void 0 ? void 0 : error_1.message), error_1);
                             if (enableReconnect) {
                                 console.log("=============== Retrying to reconnect to imxLogger in " +
                                     reconnectTimeout +
@@ -286,8 +280,7 @@ var LOGGER = (function () {
                                                 return [3 /*break*/, 4];
                                             case 3:
                                                 error_4 = _a.sent();
-                                                console.error("Error in reconnect from connection catch : " + (error_4 === null || error_4 === void 0 ? void 0 : error_4.message));
-                                                return [3 /*break*/, 4];
+                                                return [2 /*return*/];
                                             case 4: return [2 /*return*/];
                                         }
                                     });
@@ -371,7 +364,7 @@ var LOGGER = (function () {
             rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.error(payload);
         },
         debug: function (payload) {
-            if ((disableAll && !isLogOnly) || !isDebugLogsEnabled)
+            if (disableAll || !isDebugLogsEnabled)
                 return;
             if (isLogOnly) {
                 console.log(payload);
@@ -394,7 +387,7 @@ var LOGGER = (function () {
                 (_a = rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.amqpConnection) === null || _a === void 0 ? void 0 : _a.emit("disconnected");
             }
             catch (error) {
-                console.warn("Error with disconnect function : " + (error === null || error === void 0 ? void 0 : error.message), error);
+                return;
             }
         },
     };

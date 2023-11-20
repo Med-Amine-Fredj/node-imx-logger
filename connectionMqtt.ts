@@ -70,10 +70,7 @@ const LOGGER = (function () {
             amqpConnection: null,
             channelConnection: null,
           };
-          console.error(
-            "Erreur in createConnectionToRabbitMQ  from imxNodeLogger: ",
-            error?.message
-          );
+
           if (enableReconnect) {
             console.log(
               "=============== Retrying to reconnect to imxLogger in " +
@@ -116,16 +113,13 @@ const LOGGER = (function () {
         });
 
         conn?.on("blocked", (reason) => {
-          console.error(
-            "Connection to RabbitMQ is blocked for  (will disable logs until connection will be unblocked): " +
-              reason
-          );
           disableAll = true;
+          return;
         });
 
         conn?.on("unblocked", () => {
-          console.log("Connection to RabbitMQ is unblocked ");
           disableAll = false;
+          return;
         });
 
         conn?.on("disconnected", () => {
@@ -172,11 +166,6 @@ const LOGGER = (function () {
             return;
           }
 
-          console.error(
-            "Erreur in createConnectionToRabbitMQ : Channel Error ",
-            error?.message
-          );
-
           if (enableReconnect) {
             console.log(
               "=============== Retrying to reconnect to imxLogger in " +
@@ -217,7 +206,7 @@ const LOGGER = (function () {
 
         logsChannel.on("close", () => {
           disableAll = true;
-          console.error("Error in logChannel event (close)  : Channel Closed ");
+          return;
         });
 
         logsChannel.on("return", function (msg) {
@@ -235,9 +224,6 @@ const LOGGER = (function () {
 
           error(payload: messagePayloadASArg) {
             if (!logsChannel) {
-              console.error(
-                "Channel is not available => Cannot send error log."
-              );
               return;
             }
             try {
@@ -267,7 +253,6 @@ const LOGGER = (function () {
 
           debug(payload: messagePayloadASArg) {
             if (!logsChannel) {
-              console.error("Channel is not available. Cannot send error log.");
               return;
             }
 
@@ -303,10 +288,7 @@ const LOGGER = (function () {
         return rabbitMqConnection;
       } catch (error) {
         disableAll = true;
-        console.error(
-          "Erreur in createConnectionToRabbitMQ : " + error?.message,
-          error
-        );
+
         if (enableReconnect) {
           console.log(
             "=============== Retrying to reconnect to imxLogger in " +
@@ -334,9 +316,7 @@ const LOGGER = (function () {
                 }
               );
             } catch (error) {
-              console.error(
-                "Error in reconnect from connection catch : " + error?.message
-              );
+              return;
             }
           }, reconnectTimeout);
         }
@@ -435,7 +415,7 @@ const LOGGER = (function () {
     },
 
     debug(payload: messagePayloadASArg) {
-      if ((disableAll && !isLogOnly) || !isDebugLogsEnabled) return;
+      if (disableAll || !isDebugLogsEnabled) return;
       if (isLogOnly) {
         console.log(payload);
       }
@@ -462,10 +442,7 @@ const LOGGER = (function () {
       try {
         rabbitMqConnection?.amqpConnection?.emit("disconnected");
       } catch (error) {
-        console.warn(
-          "Error with disconnect function : " + error?.message,
-          error
-        );
+        return;
       }
     },
   };
