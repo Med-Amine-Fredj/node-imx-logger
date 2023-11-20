@@ -21,7 +21,7 @@ function tryStringifyJSONObject(object: object) {
       },
     };
 
-    let cache = [];
+    let cache: any = [];
 
     let str = JSON.stringify(payload, function (key, value) {
       if (typeof value === "object" && value !== null) {

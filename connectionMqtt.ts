@@ -11,7 +11,7 @@ import tryStringifyJSONObject from "./helpers/tryStringifyJSONObject";
 import createBuffer from "./helpers/createBuffer";
 
 const LOGGER = (function () {
-  let timeOutId = null;
+  let timeOutId: any = null;
   let rabbitMqConnection: rabbitMqConnectionType = null;
   let logsQueueName: string = "logs";
   let isLogOnly: boolean = false;
@@ -40,7 +40,7 @@ const LOGGER = (function () {
         onDisconnectCallback?: Function;
         onConnectCallback?: Function;
       }
-    ): Promise<rabbitMqConnectionType | undefined> {
+    ): Promise<rabbitMqConnectionType | undefined | any> {
       disableAll = extraOptions?.disableAll ?? false;
       isDebugLogsEnabled = extraOptions?.enableDebug ?? true;
       isErrorLogsEnabled = extraOptions?.enableError ?? true;

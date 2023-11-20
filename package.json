@@ -1,6 +1,6 @@
 {
   "name": "node-imx-logger",
-  "version": "1.2.21",
+  "version": "1.2.24",
   "description": "Imaxeam logger for node",
   "main": "index.js",
   "scripts": {
