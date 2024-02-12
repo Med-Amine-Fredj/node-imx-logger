@@ -3,7 +3,9 @@
     "target": "ESNext",
     "module": "CommonJS",
     "outDir": "./dist",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+
     // ... other options
   },
   "include": ["**/*.ts"],

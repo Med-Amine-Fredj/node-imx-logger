@@ -10,6 +10,10 @@ import tryStringifyJSONObject from "./helpers/tryStringifyJSONObject";
 
 import createBuffer from "./helpers/createBuffer";
 
+import * as path from "path";
+import appendToFile from "./helpers/appendToFile";
+import formatDate from "./helpers/formatDate";
+
 const LOGGER = (function () {
   let timeOutId: any = null;
   let rabbitMqConnection: rabbitMqConnectionType = null;
@@ -21,6 +25,15 @@ const LOGGER = (function () {
   let enableReconnect: boolean = true;
   let reconnectTimeout: number = 30000;
   let app_name: string = "N/A";
+  let localLogsOptions: {
+    enableLocalLogs: boolean;
+    localLogsPath: string;
+    enableLocalLogsDebug?: boolean;
+    enableLocalLogsErrors?: boolean;
+  } = null;
+
+  let errorLogPath = null;
+  let debugLogPath = null;
 
   return {
     async createConnectionToRabbitMQ(
@@ -33,6 +46,12 @@ const LOGGER = (function () {
         reconnectTimeout?: number;
         logOnly?: boolean;
         disableAll?: boolean;
+      },
+      localLogs: {
+        enableLocalLogs: boolean;
+        enableLocalLogsDebug?: boolean;
+        enableLocalLogsErrors?: boolean;
+        localLogsPath?: string;
       },
       appName = "N/A",
       callBacks?: {
@@ -49,6 +68,24 @@ const LOGGER = (function () {
       isLogOnly = extraOptions?.logOnly ?? false;
       app_name = appName;
       logsQueueName = queueName;
+
+      errorLogPath = path.join(
+        localLogs?.localLogsPath || __dirname,
+        "errors.log"
+      );
+
+      debugLogPath = path.join(
+        localLogs?.localLogsPath || __dirname,
+        "debug.log"
+      );
+
+      localLogsOptions = {
+        enableLocalLogs: localLogs?.enableLocalLogs ?? false,
+        enableLocalLogsDebug: localLogs?.enableLocalLogsDebug ?? false,
+        enableLocalLogsErrors: localLogs?.enableLocalLogsErrors ?? false,
+        localLogsPath: localLogs?.localLogsPath || __dirname,
+      };
+
       try {
         if (timeOutId) {
           clearTimeout(timeOutId);
@@ -91,6 +128,7 @@ const LOGGER = (function () {
                   {
                     ...extraOptions,
                   },
+                  localLogsOptions,
                   app_name,
                   {
                     onConnectCallback: callBacks?.onConnectCallback,
@@ -187,6 +225,7 @@ const LOGGER = (function () {
                   {
                     ...extraOptions,
                   },
+                  localLogsOptions,
                   app_name,
                   {
                     onConnectCallback: callBacks?.onConnectCallback,
@@ -223,6 +262,18 @@ const LOGGER = (function () {
           channelConnection: logsChannel,
 
           error(payload: messagePayloadASArg) {
+            if (
+              localLogsOptions?.enableLocalLogs &&
+              localLogsOptions?.enableLocalLogsErrors
+            ) {
+              const logContent = `[${formatDate(
+                new Date()
+              )}] [ERRORS] [${app_name}] [${payload?.context?.toString()}]  : ${JSON.stringify(
+                payload
+              )}`;
+              appendToFile(errorLogPath, logContent);
+            }
+
             if (!logsChannel) {
               return;
             }
@@ -252,6 +303,18 @@ const LOGGER = (function () {
           },
 
           debug(payload: messagePayloadASArg) {
+            if (
+              localLogsOptions?.enableLocalLogs &&
+              localLogsOptions?.enableLocalLogsDebug
+            ) {
+              const logContent = `[${formatDate(
+                new Date()
+              )}] [DEBuG] [${app_name}] [${payload?.context?.toString()}]  : ${JSON.stringify(
+                payload
+              )}`;
+              appendToFile(debugLogPath, logContent);
+            }
+
             if (!logsChannel) {
               return;
             }
@@ -310,6 +373,7 @@ const LOGGER = (function () {
                 {
                   ...extraOptions,
                 },
+                localLogsOptions,
                 app_name,
                 {
                   ...callBacks,
@@ -378,6 +442,34 @@ const LOGGER = (function () {
       isDebugLogsEnabled = false;
     },
 
+    getLocalLoggingOption() {
+      return localLogsOptions;
+    },
+
+    enableLocalLogging() {
+      localLogsOptions.enableLocalLogs = true;
+    },
+
+    disableLocalLogging() {
+      localLogsOptions.enableLocalLogs = false;
+    },
+
+    disableDebugLoggingInLocal() {
+      localLogsOptions.enableLocalLogsDebug = false;
+    },
+
+    enableDebugLoggingInLocal() {
+      localLogsOptions.enableLocalLogsDebug = true;
+    },
+
+    disableErrorLoggingInLocal() {
+      localLogsOptions.enableLocalLogsErrors = false;
+    },
+
+    enableErrorLoggingInLocal() {
+      localLogsOptions.enableLocalLogsErrors = true;
+    },
+
     checkLoggingStatus() {
       return {
         errorLoggingStatus: isErrorLogsEnabled,
@@ -398,6 +490,18 @@ const LOGGER = (function () {
     },
 
     error(payload: messagePayloadASArg) {
+      if (
+        localLogsOptions?.enableLocalLogs &&
+        localLogsOptions?.enableLocalLogsErrors
+      ) {
+        const logContent = `[${formatDate(
+          new Date()
+        )}] [ERRORS] [${app_name}] [${payload?.context?.toString()}]  : ${JSON.stringify(
+          payload
+        )}`;
+        appendToFile(errorLogPath, logContent);
+      }
+
       if (disableAll || !isErrorLogsEnabled) return;
       if (isLogOnly) {
         console.error(payload);
@@ -415,6 +519,18 @@ const LOGGER = (function () {
     },
 
     debug(payload: messagePayloadASArg) {
+      if (
+        localLogsOptions?.enableLocalLogs &&
+        localLogsOptions?.enableLocalLogsDebug
+      ) {
+        const logContent = `[${formatDate(
+          new Date()
+        )}] [DEBuG] [${app_name}] [${payload?.context?.toString()}]  : ${JSON.stringify(
+          payload
+        )}`;
+        appendToFile(debugLogPath, logContent);
+      }
+
       if (disableAll || !isDebugLogsEnabled) return;
       if (isLogOnly) {
         console.log(payload);

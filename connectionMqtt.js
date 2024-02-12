@@ -50,6 +50,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var amqp = require("amqplib");
 var tryStringifyJSONObject_1 = require("./helpers/tryStringifyJSONObject");
 var createBuffer_1 = require("./helpers/createBuffer");
+var path = require("path");
+var appendToFile_1 = require("./helpers/appendToFile");
+var formatDate_1 = require("./helpers/formatDate");
 var LOGGER = (function () {
     var timeOutId = null;
     var rabbitMqConnection = null;
@@ -61,15 +64,18 @@ var LOGGER = (function () {
     var enableReconnect = true;
     var reconnectTimeout = 30000;
     var app_name = "N/A";
+    var localLogsOptions = null;
+    var errorLogPath = null;
+    var debugLogPath = null;
     return {
-        createConnectionToRabbitMQ: function (option, queueName, extraOptions, appName, callBacks) {
-            var _a, _b, _c, _d, _e;
+        createConnectionToRabbitMQ: function (option, queueName, extraOptions, localLogs, appName, callBacks) {
+            var _a, _b, _c, _d, _e, _f, _g, _h;
             if (appName === void 0) { appName = "N/A"; }
             return __awaiter(this, void 0, void 0, function () {
                 var conn_1, logsChannel_1, error_1;
                 var _this = this;
-                return __generator(this, function (_f) {
-                    switch (_f.label) {
+                return __generator(this, function (_j) {
+                    switch (_j.label) {
                         case 0:
                             disableAll = (_a = extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.disableAll) !== null && _a !== void 0 ? _a : false;
                             isDebugLogsEnabled = (_b = extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.enableDebug) !== null && _b !== void 0 ? _b : true;
@@ -79,9 +85,17 @@ var LOGGER = (function () {
                             isLogOnly = (_e = extraOptions === null || extraOptions === void 0 ? void 0 : extraOptions.logOnly) !== null && _e !== void 0 ? _e : false;
                             app_name = appName;
                             logsQueueName = queueName;
-                            _f.label = 1;
+                            errorLogPath = path.join((localLogs === null || localLogs === void 0 ? void 0 : localLogs.localLogsPath) || __dirname, "errors.log");
+                            debugLogPath = path.join((localLogs === null || localLogs === void 0 ? void 0 : localLogs.localLogsPath) || __dirname, "debug.log");
+                            localLogsOptions = {
+                                enableLocalLogs: (_f = localLogs === null || localLogs === void 0 ? void 0 : localLogs.enableLocalLogs) !== null && _f !== void 0 ? _f : false,
+                                enableLocalLogsDebug: (_g = localLogs === null || localLogs === void 0 ? void 0 : localLogs.enableLocalLogsDebug) !== null && _g !== void 0 ? _g : false,
+                                enableLocalLogsErrors: (_h = localLogs === null || localLogs === void 0 ? void 0 : localLogs.enableLocalLogsErrors) !== null && _h !== void 0 ? _h : false,
+                                localLogsPath: (localLogs === null || localLogs === void 0 ? void 0 : localLogs.localLogsPath) || __dirname,
+                            };
+                            _j.label = 1;
                         case 1:
-                            _f.trys.push([1, 5, , 6]);
+                            _j.trys.push([1, 5, , 6]);
                             if (timeOutId) {
                                 clearTimeout(timeOutId);
                             }
@@ -90,7 +104,7 @@ var LOGGER = (function () {
                             }
                             return [4 /*yield*/, amqp.connect(option)];
                         case 2:
-                            conn_1 = _f.sent();
+                            conn_1 = _j.sent();
                             conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.once("error", function (error) {
                                 disableAll = true;
                                 (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback) && (callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback(error));
@@ -112,7 +126,7 @@ var LOGGER = (function () {
                                                     _a.label = 1;
                                                 case 1:
                                                     _a.trys.push([1, 3, , 4]);
-                                                    return [4 /*yield*/, LOGGER.createConnectionToRabbitMQ(option, queueName, __assign({}, extraOptions), app_name, {
+                                                    return [4 /*yield*/, LOGGER.createConnectionToRabbitMQ(option, queueName, __assign({}, extraOptions), localLogsOptions, app_name, {
                                                             onConnectCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onConnectCallback,
                                                             onDisconnectCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onDisconnectCallback,
                                                             onErrorCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback,
@@ -164,10 +178,10 @@ var LOGGER = (function () {
                             });
                             return [4 /*yield*/, (conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.createChannel())];
                         case 3:
-                            logsChannel_1 = _f.sent();
+                            logsChannel_1 = _j.sent();
                             return [4 /*yield*/, (logsChannel_1 === null || logsChannel_1 === void 0 ? void 0 : logsChannel_1.checkQueue(logsQueueName))];
                         case 4:
-                            _f.sent();
+                            _j.sent();
                             logsChannel_1.once("error", function (error) {
                                 disableAll = true;
                                 if (conn_1) {
@@ -191,7 +205,7 @@ var LOGGER = (function () {
                                                     _a.label = 1;
                                                 case 1:
                                                     _a.trys.push([1, 3, , 4]);
-                                                    return [4 /*yield*/, LOGGER.createConnectionToRabbitMQ(option, queueName, __assign({}, extraOptions), app_name, {
+                                                    return [4 /*yield*/, LOGGER.createConnectionToRabbitMQ(option, queueName, __assign({}, extraOptions), localLogsOptions, app_name, {
                                                             onConnectCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onConnectCallback,
                                                             onDisconnectCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onDisconnectCallback,
                                                             onErrorCallback: callBacks === null || callBacks === void 0 ? void 0 : callBacks.onErrorCallback,
@@ -223,6 +237,12 @@ var LOGGER = (function () {
                                 amqpConnection: conn_1,
                                 channelConnection: logsChannel_1,
                                 error: function (payload) {
+                                    var _a;
+                                    if ((localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogs) &&
+                                        (localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogsErrors)) {
+                                        var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [ERRORS] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat(JSON.stringify(payload));
+                                        (0, appendToFile_1.default)(errorLogPath, logContent);
+                                    }
                                     if (!logsChannel_1) {
                                         return;
                                     }
@@ -238,6 +258,12 @@ var LOGGER = (function () {
                                     }
                                 },
                                 debug: function (payload) {
+                                    var _a;
+                                    if ((localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogs) &&
+                                        (localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogsDebug)) {
+                                        var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [DEBuG] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat(JSON.stringify(payload));
+                                        (0, appendToFile_1.default)(debugLogPath, logContent);
+                                    }
                                     if (!logsChannel_1) {
                                         return;
                                     }
@@ -256,7 +282,7 @@ var LOGGER = (function () {
                             conn_1 === null || conn_1 === void 0 ? void 0 : conn_1.emit("connected");
                             return [2 /*return*/, rabbitMqConnection];
                         case 5:
-                            error_1 = _f.sent();
+                            error_1 = _j.sent();
                             disableAll = true;
                             if (enableReconnect) {
                                 console.log("=============== Retrying to reconnect to imxLogger in " +
@@ -274,7 +300,7 @@ var LOGGER = (function () {
                                                 _a.label = 1;
                                             case 1:
                                                 _a.trys.push([1, 3, , 4]);
-                                                return [4 /*yield*/, LOGGER.createConnectionToRabbitMQ(option, queueName, __assign({}, extraOptions), app_name, __assign({}, callBacks))];
+                                                return [4 /*yield*/, LOGGER.createConnectionToRabbitMQ(option, queueName, __assign({}, extraOptions), localLogsOptions, app_name, __assign({}, callBacks))];
                                             case 2:
                                                 _a.sent();
                                                 return [3 /*break*/, 4];
@@ -335,6 +361,27 @@ var LOGGER = (function () {
         disableDebugLogging: function () {
             isDebugLogsEnabled = false;
         },
+        getLocalLoggingOption: function () {
+            return localLogsOptions;
+        },
+        enableLocalLogging: function () {
+            localLogsOptions.enableLocalLogs = true;
+        },
+        disableLocalLogging: function () {
+            localLogsOptions.enableLocalLogs = false;
+        },
+        disableDebugLoggingInLocal: function () {
+            localLogsOptions.enableLocalLogsDebug = false;
+        },
+        enableDebugLoggingInLocal: function () {
+            localLogsOptions.enableLocalLogsDebug = true;
+        },
+        disableErrorLoggingInLocal: function () {
+            localLogsOptions.enableLocalLogsErrors = false;
+        },
+        enableErrorLoggingInLocal: function () {
+            localLogsOptions.enableLocalLogsErrors = true;
+        },
         checkLoggingStatus: function () {
             return {
                 errorLoggingStatus: isErrorLogsEnabled,
@@ -351,6 +398,12 @@ var LOGGER = (function () {
             app_name = appName;
         },
         error: function (payload) {
+            var _a;
+            if ((localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogs) &&
+                (localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogsErrors)) {
+                var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [ERRORS] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat(JSON.stringify(payload));
+                (0, appendToFile_1.default)(errorLogPath, logContent);
+            }
             if (disableAll || !isErrorLogsEnabled)
                 return;
             if (isLogOnly) {
@@ -364,6 +417,12 @@ var LOGGER = (function () {
             rabbitMqConnection === null || rabbitMqConnection === void 0 ? void 0 : rabbitMqConnection.error(payload);
         },
         debug: function (payload) {
+            var _a;
+            if ((localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogs) &&
+                (localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogsDebug)) {
+                var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [DEBuG] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat(JSON.stringify(payload));
+                (0, appendToFile_1.default)(debugLogPath, logContent);
+            }
             if (disableAll || !isDebugLogsEnabled)
                 return;
             if (isLogOnly) {
