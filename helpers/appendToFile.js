@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
 var path = require("path");
 function appendToFile(filePath, content) {
-    // Ensure the file path is not empty
     if (!filePath) {
         return;
     }

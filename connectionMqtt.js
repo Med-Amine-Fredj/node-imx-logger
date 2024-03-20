@@ -240,7 +240,7 @@ var LOGGER = (function () {
                                     var _a;
                                     if ((localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogs) &&
                                         (localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogsErrors)) {
-                                        var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [ERRORS] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat(JSON.stringify(payload));
+                                        var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [ERRORS] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat((0, tryStringifyJSONObject_1.default)(payload));
                                         (0, appendToFile_1.default)(errorLogPath, logContent);
                                     }
                                     if (!logsChannel_1) {
@@ -261,7 +261,7 @@ var LOGGER = (function () {
                                     var _a;
                                     if ((localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogs) &&
                                         (localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogsDebug)) {
-                                        var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [DEBuG] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat(JSON.stringify(payload));
+                                        var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [DEBuG] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat((0, tryStringifyJSONObject_1.default)(payload));
                                         (0, appendToFile_1.default)(debugLogPath, logContent);
                                     }
                                     if (!logsChannel_1) {
@@ -401,7 +401,7 @@ var LOGGER = (function () {
             var _a;
             if ((localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogs) &&
                 (localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogsErrors)) {
-                var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [ERRORS] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat(JSON.stringify(payload));
+                var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [ERRORS] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat((0, tryStringifyJSONObject_1.default)(payload));
                 (0, appendToFile_1.default)(errorLogPath, logContent);
             }
             if (disableAll || !isErrorLogsEnabled)
@@ -420,7 +420,7 @@ var LOGGER = (function () {
             var _a;
             if ((localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogs) &&
                 (localLogsOptions === null || localLogsOptions === void 0 ? void 0 : localLogsOptions.enableLocalLogsDebug)) {
-                var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [DEBuG] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat(JSON.stringify(payload));
+                var logContent = "[".concat((0, formatDate_1.default)(new Date()), "] [DEBuG] [").concat(app_name, "] [").concat((_a = payload === null || payload === void 0 ? void 0 : payload.context) === null || _a === void 0 ? void 0 : _a.toString(), "]  : ").concat((0, tryStringifyJSONObject_1.default)(payload));
                 (0, appendToFile_1.default)(debugLogPath, logContent);
             }
             if (disableAll || !isDebugLogsEnabled)

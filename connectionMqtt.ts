@@ -268,7 +268,7 @@ const LOGGER = (function () {
             ) {
               const logContent = `[${formatDate(
                 new Date()
-              )}] [ERRORS] [${app_name}] [${payload?.context?.toString()}]  : ${JSON.stringify(
+              )}] [ERRORS] [${app_name}] [${payload?.context?.toString()}]  : ${tryStringifyJSONObject(
                 payload
               )}`;
               appendToFile(errorLogPath, logContent);
@@ -309,7 +309,7 @@ const LOGGER = (function () {
             ) {
               const logContent = `[${formatDate(
                 new Date()
-              )}] [DEBuG] [${app_name}] [${payload?.context?.toString()}]  : ${JSON.stringify(
+              )}] [DEBuG] [${app_name}] [${payload?.context?.toString()}]  : ${tryStringifyJSONObject(
                 payload
               )}`;
               appendToFile(debugLogPath, logContent);
@@ -496,7 +496,7 @@ const LOGGER = (function () {
       ) {
         const logContent = `[${formatDate(
           new Date()
-        )}] [ERRORS] [${app_name}] [${payload?.context?.toString()}]  : ${JSON.stringify(
+        )}] [ERRORS] [${app_name}] [${payload?.context?.toString()}]  : ${tryStringifyJSONObject(
           payload
         )}`;
         appendToFile(errorLogPath, logContent);
@@ -525,7 +525,7 @@ const LOGGER = (function () {
       ) {
         const logContent = `[${formatDate(
           new Date()
-        )}] [DEBuG] [${app_name}] [${payload?.context?.toString()}]  : ${JSON.stringify(
+        )}] [DEBuG] [${app_name}] [${payload?.context?.toString()}]  : ${tryStringifyJSONObject(
           payload
         )}`;
         appendToFile(debugLogPath, logContent);
